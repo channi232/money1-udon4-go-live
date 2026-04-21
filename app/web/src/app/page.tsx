@@ -6,6 +6,7 @@ import { fetchSlipRows } from "@/lib/slip-api";
 import { fetchTaxRows } from "@/lib/tax-api";
 import { fetchSession, type ServerSession } from "@/lib/auth-api";
 import { fetchDailyBrief } from "@/lib/daily-brief-api";
+import { fetchWorkflowMap } from "@/lib/workflow-state-api";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
@@ -33,6 +34,7 @@ type HomeSnapshot = {
   dailyAuditTotal: number;
   dailySecurityTotal: number;
   dailyRecommendations: string[];
+  workflowPersistence: "database" | "file" | "unknown";
 };
 
 function formatInt(n: number) {
@@ -76,12 +78,13 @@ export default function Home() {
     let active = true;
     (async () => {
       try {
-        const [money, slip, tax, session, daily] = await Promise.all([
+        const [money, slip, tax, session, daily, workflow] = await Promise.all([
           fetchMoneyRows({ preflight: true, limit: 50 }),
           fetchSlipRows({ preflight: true, limit: 50 }),
           fetchTaxRows({ preflight: true, limit: 50 }),
           fetchSession(),
           fetchDailyBrief(),
+          fetchWorkflowMap(),
         ]);
         if (!active) return;
         const fetchedAt = new Intl.DateTimeFormat("th-TH", {
@@ -122,6 +125,7 @@ export default function Home() {
           dailyAuditTotal: daily.ok ? daily.summary.audit_total : 0,
           dailySecurityTotal: daily.ok ? daily.summary.security_total : 0,
           dailyRecommendations: daily.ok ? daily.recommendations : [],
+          workflowPersistence: workflow.ok ? (workflow.persistence || "unknown") : "unknown",
         });
       } finally {
         if (active) setLoading(false);
@@ -190,6 +194,11 @@ export default function Home() {
         title: "ความเสี่ยงประจำวันไม่วิกฤต",
         ok: snapshot.dailyRiskLevel !== "critical",
         detail: `ระดับความเสี่ยง: ${snapshot.dailyRiskLevel}`,
+      },
+      {
+        title: "Workflow เก็บลงฐานข้อมูลจริง",
+        ok: snapshot.workflowPersistence === "database",
+        detail: `persistence: ${snapshot.workflowPersistence}`,
       },
     ];
   }, [snapshot]);

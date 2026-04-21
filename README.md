@@ -24,3 +24,8 @@ New isolated project workspace for the unified finance platform.
 2. Design auth/role model and audit logging.
 3. Build a clean MVP portal UI.
 4. Integrate each module and database one by one.
+
+## Operations Docs
+- `docs/GO_LIVE_RUNBOOK_TH.md` - คู่มือขั้นตอนวัน Go-Live
+- `docs/POST_GO_LIVE_24H_MONITORING_TH.md` - เช็กลิสต์เฝ้าระวัง 24 ชั่วโมงแรกหลังเปิดใช้งาน
+- `docs/INCIDENT_TEMPLATE_TH.md` - แบบฟอร์มบันทึก incident สำหรับทีม support/ops

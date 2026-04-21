@@ -1,6 +1,7 @@
 "use client";
 
 import AuthGuard from "@/components/auth-guard";
+import { useMemo, useState } from "react";
 
 type IncidentRow = {
   time: string;
@@ -61,7 +62,26 @@ function exportIncidentCsv(rows: IncidentRow[]) {
 }
 
 export default function IncidentLogPage() {
+  const [traceInput, setTraceInput] = useState("");
+  const [copied, setCopied] = useState(false);
   const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
+  const parsedTrace = useMemo(() => {
+    const text = traceInput.trim();
+    const req = text.match(/req=([^|]+)/i)?.[1]?.trim() || "";
+    const code = text.match(/code=([^|]+)/i)?.[1]?.trim() || "";
+    const stage = text.match(/stage=([^|]+)/i)?.[1]?.trim() || "";
+    return { req, code, stage };
+  }, [traceInput]);
+  const copyIncidentLine = async () => {
+    const line = `Trace: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
+    try {
+      await navigator.clipboard.writeText(line);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   return (
     <AuthGuard allowedRoles={["admin"]}>
@@ -94,6 +114,26 @@ export default function IncidentLogPage() {
 
           <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900">
             ใช้หน้านี้บันทึกเหตุการณ์จริงระหว่าง Go-Live และแนบเป็นหลักฐานปิดงานวันแรก
+          </div>
+          <div className="no-print mt-3 rounded-lg border border-indigo-300 bg-indigo-50 p-3">
+            <p className="text-sm font-semibold text-indigo-900">Trace Helper (วางจากปุ่มคัดลอก trace)</p>
+            <textarea
+              className="mt-2 w-full rounded border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-900"
+              rows={2}
+              placeholder="วาง support trace เช่น req=tax_summary-xxxx | code=TAX_QUERY_FAILED | stage=query_rows"
+              value={traceInput}
+              onChange={(e) => setTraceInput(e.target.value)}
+            />
+            <p className="mt-2 text-xs text-indigo-800">
+              req={parsedTrace.req || "-"} | code={parsedTrace.code || "-"} | stage={parsedTrace.stage || "-"}
+            </p>
+            <button
+              type="button"
+              className="mt-2 rounded border border-indigo-300 bg-white px-2 py-1 text-xs text-indigo-900 hover:bg-indigo-100"
+              onClick={() => void copyIncidentLine()}
+            >
+              {copied ? "คัดลอกแล้ว" : "คัดลอกบรรทัดสำหรับ Incident"}
+            </button>
           </div>
 
           <div className="mt-4 overflow-x-auto">

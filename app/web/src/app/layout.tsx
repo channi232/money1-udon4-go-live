@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "money.udon4.go.th",
-  description: "Unified Finance Platform",
+  title: "สพป.อุดรธานี เขต 4 - ระบบการเงิน",
+  description: "ระบบบริหารงานการเงินและงานสนับสนุนของสำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4",
   icons: {
     icon: "/logo-udon.ico",
     shortcut: "/logo-udon.ico",

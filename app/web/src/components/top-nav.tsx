@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchSession, type ServerSession } from "@/lib/auth-api";
+import Image from "next/image";
 
 export default function TopNav() {
   const [auth, setAuth] = useState<ServerSession | null>(null);
+  const [logoMissing, setLogoMissing] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -25,8 +27,28 @@ export default function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-3 py-2 md:px-4">
-        <Link href="/" className="shrink-0 text-sm font-semibold text-slate-900 md:text-base">
-          money.udon4.go.th
+        <Link href="/" className="flex shrink-0 items-center gap-2 text-slate-900">
+          {logoMissing ? (
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orange-300 bg-orange-50 text-[10px] font-bold text-orange-800">
+              สพป.4
+            </span>
+          ) : (
+            <Image
+              src="/org-logo.png"
+              alt="โลโก้สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4"
+              width={36}
+              height={36}
+              className="rounded-full border border-orange-200 bg-white object-cover"
+              onError={() => setLogoMissing(true)}
+              priority
+            />
+          )}
+          <span className="hidden text-xs font-semibold leading-tight md:block">
+            สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4
+            <br />
+            <span className="text-[11px] text-slate-600">สพป.อุดรธานี เขต 4</span>
+          </span>
+          <span className="text-sm font-semibold md:hidden">สพป.อุดรธานี เขต 4</span>
         </Link>
         <nav className="ml-2 flex min-w-0 items-center gap-0.5 whitespace-nowrap text-xs text-slate-700 md:text-sm">
           <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/money">

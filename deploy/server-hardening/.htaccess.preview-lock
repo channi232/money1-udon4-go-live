@@ -1,0 +1,7 @@
+# Preview lock for development stage (enable Basic Auth)
+# Copy this file's content into /public_html/.htaccess when you want to lock the whole site.
+
+AuthType Basic
+AuthName "Restricted Preview - money.udon4.go.th"
+AuthUserFile /domains/money.udon4.go.th/public_html/.htpasswd
+Require valid-user

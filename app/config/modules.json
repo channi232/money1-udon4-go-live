@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Money Module",
+    "description": "โมดูลการเงินหลักสำหรับงานจัดการรายการและสถานะการจ่าย",
+    "status": "Active",
+    "path": "#"
+  },
+  {
+    "name": "Slip Module",
+    "description": "โมดูลสลิปเงินเดือน พร้อมค้นหาและเรียกดูย้อนหลัง",
+    "status": "Active",
+    "path": "#"
+  },
+  {
+    "name": "Tax Module",
+    "description": "โมดูลหนังสือรับรองภาษี และบริการดาวน์โหลดเอกสาร",
+    "status": "Active",
+    "path": "#"
+  }
+]

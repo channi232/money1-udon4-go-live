@@ -1,0 +1,34 @@
+# Disable directory listing
+Options -Indexes
+
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Basic security headers
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+# Minimal CSP for static Next export
+Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self' data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';"
+
+# Deny access to sensitive or hidden files
+<FilesMatch "^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json|tsconfig\.json|next\.config\.(js|ts)|README\.md)$">
+  Require all denied
+</FilesMatch>
+
+# Protect dotfiles
+RedirectMatch 404 /\..*$
+
+# Preview lock for development stage (enable Basic Auth)
+# Copy this file's content into /public_html/.htaccess when you want to lock the whole site.
+
+# AuthType Basic
+# AuthName "Restricted Preview - money.udon4.go.th"
+# AuthUserFile /domains/money.udon4.go.th/public_html/.htpasswd
+# Require valid-user
+

@@ -1,0 +1,27 @@
+# Environment and secrets
+.env
+.env.*
+deploy/php-auth-api/db-config.php
+deploy/php-auth-api/epay-db-config.php
+deploy/php-auth-api/personal-db-config.php
+deploy/server-hardening/.htpasswd
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+.next/
+coverage/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+vendor/

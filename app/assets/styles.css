@@ -1,0 +1,66 @@
+:root {
+  --bg: #f4f7fb;
+  --text: #0f172a;
+  --muted: #475569;
+  --card: #ffffff;
+  --line: #dbe3ee;
+  --primary: #0a67ff;
+  --ok: #138a36;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: radial-gradient(circle at top right, #dfefff, var(--bg));
+  color: var(--text);
+}
+
+.container { width: min(1100px, 92%); margin: 0 auto; }
+.topbar { background: #0b2c5a; color: #fff; padding: 14px 0; }
+.topbar .container { display: flex; justify-content: space-between; align-items: center; }
+.brand { font-weight: 700; letter-spacing: .5px; }
+
+.hero { padding: 48px 0 30px; }
+.badge {
+  display: inline-block; background: #e8f0ff; color: #12439c;
+  border: 1px solid #c3d9ff; padding: 6px 10px; border-radius: 99px; font-size: 13px;
+}
+h1 { font-size: clamp(30px, 5vw, 48px); margin: 14px 0; line-height: 1.15; }
+.subtitle { color: var(--muted); font-size: 18px; max-width: 760px; }
+.actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+.btn {
+  text-decoration: none; border-radius: 10px; padding: 10px 14px; border: 1px solid var(--line);
+  color: var(--text); background: #fff; font-weight: 600; display: inline-block;
+}
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.ghost { background: transparent; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  padding-bottom: 36px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+}
+.card h3 { margin: 0 0 6px; }
+.card p { color: var(--muted); margin: 0 0 12px; }
+.pill {
+  display: inline-block; padding: 4px 8px; border-radius: 99px;
+  font-size: 12px; border: 1px solid #bde3c8; color: var(--ok); background: #effbf3;
+}
+
+.footer {
+  border-top: 1px solid var(--line);
+  background: #fff;
+  padding: 14px 0;
+}
+.footer .container { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; }

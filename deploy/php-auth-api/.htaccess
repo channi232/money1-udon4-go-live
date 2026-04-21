@@ -1,0 +1,48 @@
+Options -Indexes
+
+# Do not override parent auth rules here.
+# Parent /public_html/.htaccess controls Basic Auth lock.
+
+# Protect sensitive config files
+<FilesMatch "^(db-config\.php|db-config\.sample\.php|personal-db-config\.php|personal-lookup\.php|workflow-db-store\.php|epay-db-config\.php|rate-limit\.php|security-common\.php|role-map\.php|schema-map\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Protect runtime log/state files
+<FilesMatch "^(audit\.log|audit-review\.json|workflow-state\.json|workflow-transition\.log)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Disable diagnostic endpoints in production.
+<FilesMatch "^(whereami\.php|path-check\.php|personal-schema\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Protect dotfiles in this folder
+<FilesMatch "^\..*">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

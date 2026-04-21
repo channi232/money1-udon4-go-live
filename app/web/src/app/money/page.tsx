@@ -23,10 +23,13 @@ function formatMoneyDate(raw: string): string {
   return value;
 }
 
-async function exportMoneyCsv(rows: MoneyRow[]) {
+async function exportMoneyCsv(
+  rows: MoneyRow[],
+  getPriority: (row: MoneyRow) => MoneyPriority,
+) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เลขที่รายการ", "ชื่อบุคลากร", "งวดข้อมูล", "จำนวนเงิน", "สถานะ"];
-  const dataRows = rows.map((r) => [r.id, r.school, formatMoneyDate(r.date), String(r.amount), r.status]);
+  const header = ["เลขที่รายการ", "ชื่อบุคลากร", "งวดข้อมูล", "จำนวนเงิน", "สถานะ", "Priority"];
+  const dataRows = rows.map((r) => [r.id, r.school, formatMoneyDate(r.date), String(r.amount), r.status, getPriority(r)]);
   await exportCsvChunked({
     filename: `money-report-${stamp}.csv`,
     header,
@@ -47,11 +50,30 @@ function workflowHistoryText(meta?: WorkflowMeta): string {
   return `${last.from || "new"} -> ${last.to || "-"} by ${last.by || "unknown"} @ ${last.at || "-"}`;
 }
 
+type MoneyPriority = "สูง" | "กลาง" | "ปกติ";
+
+function resolveMoneyPriority(row: MoneyRow, workflow: WorkflowStatus): MoneyPriority {
+  if (workflow === "rejected") return "สูง";
+  if (workflow === "in_review" && row.amount >= 500000) return "สูง";
+  if (workflow === "in_review" || row.amount >= 300000) return "กลาง";
+  return "ปกติ";
+}
+
+function moneyPriorityClass(priority: MoneyPriority): string {
+  if (priority === "สูง") return "border-rose-300 bg-rose-50 text-rose-800";
+  if (priority === "กลาง") return "border-amber-300 bg-amber-50 text-amber-800";
+  return "border-emerald-300 bg-emerald-50 text-emerald-800";
+}
+
+const MONEY_VIEW_STORAGE_KEY = "money-module-view-v1";
+
 export default function MoneyPage() {
   const PAGE_SIZE = 150;
   const [q, setQ] = useState("");
   const deferredQ = useDeferredValue(q);
   const [status, setStatus] = useState("ทั้งหมด");
+  const [sortBy, setSortBy] = useState<"date_desc" | "amount_desc" | "amount_asc" | "id_desc">("date_desc");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | MoneyPriority>("all");
   const [workflowFilter, setWorkflowFilter] = useState<"all" | WorkflowStatus>("all");
   const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({});
   const [bulkMessage, setBulkMessage] = useState("");
@@ -66,6 +88,46 @@ export default function MoneyPage() {
   const [moneyMeta, setMoneyMeta] = useState<MoneyApiResponse["meta"]>(undefined);
   const [apiDiag, setApiDiag] = useState<{ requestId?: string; errorCode?: string; stage?: string }>({});
   const [copiedTrace, setCopiedTrace] = useState(false);
+  const [usingSavedView, setUsingSavedView] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(MONEY_VIEW_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        q?: string;
+        status?: string;
+        workflowFilter?: "all" | WorkflowStatus;
+        priorityFilter?: "all" | MoneyPriority;
+        sortBy?: "date_desc" | "amount_desc" | "amount_asc" | "id_desc";
+      };
+      if (typeof saved.q === "string") setQ(saved.q);
+      if (typeof saved.status === "string") setStatus(saved.status);
+      if (saved.workflowFilter) setWorkflowFilter(saved.workflowFilter);
+      if (saved.priorityFilter) setPriorityFilter(saved.priorityFilter);
+      if (saved.sortBy) setSortBy(saved.sortBy);
+      setUsingSavedView(true);
+    } catch {
+      // ignore invalid persisted view
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        MONEY_VIEW_STORAGE_KEY,
+        JSON.stringify({
+          q,
+          status,
+          workflowFilter,
+          priorityFilter,
+          sortBy,
+        }),
+      );
+    } catch {
+      // ignore storage write failure
+    }
+  }, [q, status, workflowFilter, priorityFilter, sortBy]);
 
   useEffect(() => {
     let active = true;
@@ -196,22 +258,36 @@ export default function MoneyPage() {
 
   const filtered = useMemo(() => {
     const needle = deferredQ.trim().toLowerCase();
+    const amountNeedle = Number(needle.replace(/,/g, ""));
     return rows.filter((r) => {
-      const matchesQ = needle === "" || `${r.id} ${r.school}`.toLowerCase().includes(needle);
-      const matchesStatus = status === "ทั้งหมด" || r.status === status;
       const key = `money:${r.id}`;
       const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
+      const priority = resolveMoneyPriority(r, workflow);
+      const workflowLabel = workflowStatusLabel(workflow).toLowerCase();
+      const searchable = `${r.id} ${r.school} ${r.status} ${formatMoneyDate(r.date)} ${workflowLabel}`.toLowerCase();
+      const matchesText = needle === "" || searchable.includes(needle);
+      const matchesAmount = Number.isFinite(amountNeedle) && needle !== "" ? r.amount === amountNeedle : false;
+      const matchesQ = matchesText || matchesAmount;
+      const matchesStatus = status === "ทั้งหมด" || r.status === status;
       const matchesWorkflow = workflowFilter === "all" || workflow === workflowFilter;
-      return matchesQ && matchesStatus && matchesWorkflow;
+      const matchesPriority = priorityFilter === "all" || priority === priorityFilter;
+      return matchesQ && matchesStatus && matchesWorkflow && matchesPriority;
     });
-  }, [deferredQ, status, rows, workflowState, workflowFilter]);
+  }, [deferredQ, status, rows, workflowState, workflowFilter, priorityFilter]);
+  const sortedFiltered = useMemo(() => {
+    const list = [...filtered];
+    if (sortBy === "amount_desc") return list.sort((a, b) => b.amount - a.amount);
+    if (sortBy === "amount_asc") return list.sort((a, b) => a.amount - b.amount);
+    if (sortBy === "id_desc") return list.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+    return list.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  }, [filtered, sortBy]);
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [deferredQ, status, rows]);
-  const visibleRows = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
-  const hasMore = visibleRows.length < filtered.length;
+  }, [deferredQ, status, rows, workflowFilter, sortBy, priorityFilter]);
+  const visibleRows = useMemo(() => sortedFiltered.slice(0, visibleCount), [sortedFiltered, visibleCount]);
+  const hasMore = visibleRows.length < sortedFiltered.length;
   const workflowSummary = useMemo(() => {
     const sum = { new: 0, in_review: 0, approved: 0, rejected: 0 };
     for (const r of filtered) {
@@ -221,6 +297,38 @@ export default function MoneyPage() {
     }
     return sum;
   }, [filtered, workflowState]);
+  const prioritySummary = useMemo(() => {
+    const sum: Record<MoneyPriority, number> = { สูง: 0, กลาง: 0, ปกติ: 0 };
+    for (const r of sortedFiltered) {
+      const key = `money:${r.id}`;
+      const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
+      const p = resolveMoneyPriority(r, workflow);
+      sum[p] += 1;
+    }
+    return sum;
+  }, [sortedFiltered, workflowState]);
+  const moneyStats = useMemo(() => {
+    const totalAmount = sortedFiltered.reduce((acc, r) => acc + r.amount, 0);
+    const avgAmount = sortedFiltered.length > 0 ? totalAmount / sortedFiltered.length : 0;
+    let highPriorityCount = 0;
+    for (const r of sortedFiltered) {
+      const key = `money:${r.id}`;
+      const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
+      if (resolveMoneyPriority(r, workflow) === "สูง") highPriorityCount += 1;
+    }
+    return {
+      totalAmount,
+      avgAmount,
+      highPriorityCount,
+    };
+  }, [sortedFiltered, workflowState]);
+  const highPriorityRows = useMemo(() => {
+    return sortedFiltered.filter((r) => {
+      const key = `money:${r.id}`;
+      const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
+      return resolveMoneyPriority(r, workflow) === "สูง";
+    });
+  }, [sortedFiltered, workflowState]);
   const visibleKeys = useMemo(() => visibleRows.map((r) => `money:${r.id}`), [visibleRows]);
   const selectedCount = useMemo(() => visibleKeys.filter((k) => selectedKeys[k]).length, [visibleKeys, selectedKeys]);
   useEffect(() => {
@@ -242,6 +350,19 @@ export default function MoneyPage() {
       window.setTimeout(() => setCopiedTrace(false), 1500);
     } catch {
       setCopiedTrace(false);
+    }
+  };
+  const resetSavedView = () => {
+    setQ("");
+    setStatus("ทั้งหมด");
+    setWorkflowFilter("all");
+    setPriorityFilter("all");
+    setSortBy("date_desc");
+    setUsingSavedView(false);
+    try {
+      window.localStorage.removeItem(MONEY_VIEW_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
     }
   };
 
@@ -282,17 +403,23 @@ export default function MoneyPage() {
             ไม่เช่นนั้นใช้การประเมินจากยอดเงิน
           </p>
         ) : null}
+        <p className="mt-1 text-xs text-slate-500">
+          เกณฑ์ Priority: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
+        </p>
+        {usingSavedView ? (
+          <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
+        ) : null}
 
         <section className="scheme-light mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
             <h2 className="text-xl font-bold">รายงานโมดูลการเงิน (Money)</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
-            <p className="text-sm text-slate-700">จำนวนรายการ: {filtered.length}</p>
+            <p className="text-sm text-slate-700">จำนวนรายการ: {sortedFiltered.length}</p>
           </div>
           <div className="no-print grid gap-3 md:grid-cols-3">
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400"
-              placeholder="ค้นหารหัส / ชื่อบุคลากร"
+              placeholder="ค้นหา: รหัส/ชื่อ/สถานะ/workflow/จำนวนเงิน/งวดข้อมูล"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -307,8 +434,93 @@ export default function MoneyPage() {
               <option>ตีกลับ</option>
             </select>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              พบรายการ: <span className="font-semibold text-slate-900">{filtered.length}</span>
+              พบรายการ: <span className="font-semibold text-slate-900">{sortedFiltered.length}</span>
               {q !== deferredQ ? <span className="ml-2 text-xs text-slate-400">กำลังกรอง...</span> : null}
+            </div>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "date_desc" | "amount_desc" | "amount_asc" | "id_desc")}
+            >
+              <option value="date_desc">เรียง: งวดข้อมูลล่าสุดก่อน</option>
+              <option value="amount_desc">เรียง: จำนวนเงินมากไปน้อย</option>
+              <option value="amount_asc">เรียง: จำนวนเงินน้อยไปมาก</option>
+              <option value="id_desc">เรียง: เลขที่รายการล่าสุดก่อน</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as "all" | MoneyPriority)}
+            >
+              <option value="all">priority: ทั้งหมด</option>
+              <option value="สูง">priority: สูง</option>
+              <option value="กลาง">priority: กลาง</option>
+              <option value="ปกติ">priority: ปกติ</option>
+            </select>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+                onClick={() => {
+                  setStatus("รอตรวจสอบ");
+                  setWorkflowFilter("in_review");
+                  setSortBy("date_desc");
+                }}
+              >
+                preset: รอตรวจสอบ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setStatus("ตีกลับ");
+                  setWorkflowFilter("rejected");
+                  setSortBy("date_desc");
+                }}
+              >
+                preset: ตีกลับ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+                onClick={() => {
+                  setStatus("ทั้งหมด");
+                  setWorkflowFilter("all");
+                  setSortBy("amount_desc");
+                  setPriorityFilter("all");
+                }}
+              >
+                preset: ยอดเงินสูงสุด
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={() => {
+                  resetSavedView();
+                }}
+              >
+                preset: เคลียร์ทั้งหมด
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={resetSavedView}
+              >
+                รีเซ็ตมุมมอง
+              </button>
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setPriorityFilter("สูง");
+                  setWorkflowFilter("all");
+                  setSortBy("amount_desc");
+                }}
+              >
+                preset: คิวเร่งด่วน
+              </button>
             </div>
           </div>
           <div className="no-print mt-3 flex gap-2">
@@ -316,18 +528,52 @@ export default function MoneyPage() {
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() => {
-                void trackAudit("money", "export_csv", filtered.length);
-                void exportMoneyCsv(filtered);
+                void trackAudit("money", "export_csv", sortedFiltered.length);
+                void exportMoneyCsv(sortedFiltered, (row) => {
+                  const key = `money:${row.id}`;
+                  const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(row.status);
+                  return resolveMoneyPriority(row, workflow);
+                });
               }}
             >
               Export CSV
             </button>
             <button
               type="button"
+              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
+              onClick={() => {
+                void trackAudit("money", "export_csv", highPriorityRows.length);
+                void exportMoneyCsv(highPriorityRows, (row) => {
+                  const key = `money:${row.id}`;
+                  const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(row.status);
+                  return resolveMoneyPriority(row, workflow);
+                });
+              }}
+            >
+              Export คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
+              onClick={() =>
+                printMoneyReport(highPriorityRows.length, () => {
+                  setQ("");
+                  setStatus("ทั้งหมด");
+                  setWorkflowFilter("all");
+                  setPriorityFilter("สูง");
+                  setSortBy("amount_desc");
+                  setVisibleCount(highPriorityRows.length);
+                })
+              }
+            >
+              พิมพ์คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() =>
-                printMoneyReport(filtered.length, () => {
-                  setVisibleCount(filtered.length);
+                printMoneyReport(sortedFiltered.length, () => {
+                  setVisibleCount(sortedFiltered.length);
                 })
               }
             >
@@ -371,6 +617,40 @@ export default function MoneyPage() {
               ล้างตัวกรองสถานะงาน
             </button>
           </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "สูง" ? "border-rose-500 bg-rose-100 text-rose-900" : "border-rose-300 bg-rose-50 text-rose-800"}`}
+              onClick={() => setPriorityFilter("สูง")}
+            >
+              คิวสูง: {prioritySummary["สูง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "กลาง" ? "border-amber-500 bg-amber-100 text-amber-900" : "border-amber-300 bg-amber-50 text-amber-800"}`}
+              onClick={() => setPriorityFilter("กลาง")}
+            >
+              คิวกลาง: {prioritySummary["กลาง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "ปกติ" ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}
+              onClick={() => setPriorityFilter("ปกติ")}
+            >
+              คิวปกติ: {prioritySummary["ปกติ"]}
+            </button>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
+              ยอดรวมตามมุมมอง: <span className="font-semibold text-indigo-900">{moneyStats.totalAmount.toLocaleString("th-TH")} บาท</span>
+            </div>
+            <div className="rounded border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700">
+              ค่าเฉลี่ยต่อรายการ: <span className="font-semibold text-slate-900">{Math.round(moneyStats.avgAmount).toLocaleString("th-TH")} บาท</span>
+            </div>
+            <div className="rounded border border-rose-300 bg-rose-50 px-3 py-2 text-rose-800">
+              รายการคิวสูง: <span className="font-semibold text-rose-900">{moneyStats.highPriorityCount}</span>
+            </div>
+          </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>
             <button type="button" className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800" onClick={() => void bulkApply("in_review")}>รับเรื่องที่เลือก</button>
@@ -408,7 +688,7 @@ export default function MoneyPage() {
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               >
                 แสดงเพิ่มอีก {PAGE_SIZE.toLocaleString("th-TH")} แถว (เหลืออีก{" "}
-                {(filtered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
+                {(sortedFiltered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
               </button>
             </div>
           ) : null}
@@ -424,6 +704,7 @@ export default function MoneyPage() {
                   <th className="py-2">งวดข้อมูล</th>
                   <th className="py-2">จำนวนเงิน</th>
                   <th className="py-2">สถานะ</th>
+                  <th className="py-2 no-print">Priority</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>
@@ -449,6 +730,14 @@ export default function MoneyPage() {
                     <td className="py-2">{formatMoneyDate(r.date)}</td>
                     <td className="py-2">{r.amount.toLocaleString()} บาท</td>
                     <td className="py-2">{r.status}</td>
+                    <td className="py-2 no-print">
+                      {(() => {
+                        const key = `money:${r.id}`;
+                        const workflow = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
+                        const priority = resolveMoneyPriority(r, workflow);
+                        return <span className={`rounded-md border px-2 py-0.5 text-xs ${moneyPriorityClass(priority)}`}>{priority}</span>;
+                      })()}
+                    </td>
                     <td className="py-2 no-print">
                       {(() => {
                         const key = `money:${r.id}`;

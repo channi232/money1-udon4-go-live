@@ -15,10 +15,27 @@ import {
 import { fetchWorkflowMap, saveWorkflowStatus, type WorkflowMeta } from "@/lib/workflow-state-api";
 import WorkflowHistoryModal from "@/components/workflow-history-modal";
 
-async function exportTaxCsv(rows: TaxRow[]) {
+type TaxPriority = "สูง" | "กลาง" | "ปกติ";
+
+function resolveTaxPriority(row: TaxRow, workflow: WorkflowStatus): TaxPriority {
+  if (workflow === "rejected") return "สูง";
+  if (workflow === "in_review") return "สูง";
+  if (row.status.includes("อยู่ระหว่าง")) return "กลาง";
+  return "ปกติ";
+}
+
+function taxPriorityClass(priority: TaxPriority): string {
+  if (priority === "สูง") return "border-rose-300 bg-rose-50 text-rose-800";
+  if (priority === "กลาง") return "border-amber-300 bg-amber-50 text-amber-800";
+  return "border-emerald-300 bg-emerald-50 text-emerald-800";
+}
+
+const TAX_VIEW_STORAGE_KEY = "tax-module-view-v1";
+
+async function exportTaxCsv(rows: TaxRow[], getPriority: (row: TaxRow) => TaxPriority) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เลขบัตรประชาชน (Masked)", "ชื่อ-นามสกุล", "ปีภาษี", "สถานะเอกสาร"];
-  const dataRows = rows.map((r) => [r.citizenIdMasked, r.fullName, r.year, r.status]);
+  const header = ["เลขบัตรประชาชน (Masked)", "ชื่อ-นามสกุล", "ปีภาษี", "สถานะเอกสาร", "Priority"];
+  const dataRows = rows.map((r) => [r.citizenIdMasked, r.fullName, r.year, r.status, getPriority(r)]);
   await exportCsvChunked({
     filename: `tax-report-${stamp}.csv`,
     header,
@@ -44,6 +61,8 @@ export default function TaxPage() {
   const [q, setQ] = useState("");
   const deferredQ = useDeferredValue(q);
   const [year, setYear] = useState("ทั้งหมด");
+  const [sortBy, setSortBy] = useState<"year_desc" | "name_asc" | "id_desc">("year_desc");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | TaxPriority>("all");
   const [workflowFilter, setWorkflowFilter] = useState<"all" | WorkflowStatus>("all");
   const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({});
   const [bulkMessage, setBulkMessage] = useState("");
@@ -57,6 +76,7 @@ export default function TaxPage() {
   const [apiMessage, setApiMessage] = useState("");
   const [taxMeta, setTaxMeta] = useState<TaxApiResponse["meta"]>(undefined);
   const [apiDiag, setApiDiag] = useState<{ requestId?: string; errorCode?: string; stage?: string }>({});
+  const [usingSavedView, setUsingSavedView] = useState(false);
   const [copiedTrace, setCopiedTrace] = useState(false);
 
   useEffect(() => {
@@ -84,6 +104,45 @@ export default function TaxPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(TAX_VIEW_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        q?: string;
+        year?: string;
+        workflowFilter?: "all" | WorkflowStatus;
+        priorityFilter?: "all" | TaxPriority;
+        sortBy?: "year_desc" | "name_asc" | "id_desc";
+      };
+      if (typeof saved.q === "string") setQ(saved.q);
+      if (typeof saved.year === "string") setYear(saved.year);
+      if (saved.workflowFilter) setWorkflowFilter(saved.workflowFilter);
+      if (saved.priorityFilter) setPriorityFilter(saved.priorityFilter);
+      if (saved.sortBy) setSortBy(saved.sortBy);
+      setUsingSavedView(true);
+    } catch {
+      // ignore invalid persisted view
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        TAX_VIEW_STORAGE_KEY,
+        JSON.stringify({
+          q,
+          year,
+          workflowFilter,
+          priorityFilter,
+          sortBy,
+        }),
+      );
+    } catch {
+      // ignore storage write failure
+    }
+  }, [q, year, workflowFilter, priorityFilter, sortBy]);
 
   const saveWorkflowForKey = async (
     key: string,
@@ -127,17 +186,25 @@ export default function TaxPage() {
       const matchesYear = year === "ทั้งหมด" || r.year === year;
       const key = `tax:${r.citizenIdMasked}:${r.year}`;
       const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+      const priority = resolveTaxPriority(r, workflow);
       const matchesWorkflow = workflowFilter === "all" || workflow === workflowFilter;
-      return matchesQ && matchesYear && matchesWorkflow;
+      const matchesPriority = priorityFilter === "all" || priority === priorityFilter;
+      return matchesQ && matchesYear && matchesWorkflow && matchesPriority;
     });
-  }, [deferredQ, year, rows, workflowState, workflowFilter]);
+  }, [deferredQ, year, rows, workflowState, workflowFilter, priorityFilter]);
+  const sortedFiltered = useMemo(() => {
+    const list = [...filtered];
+    if (sortBy === "name_asc") return list.sort((a, b) => a.fullName.localeCompare(b.fullName, "th"));
+    if (sortBy === "id_desc") return list.sort((a, b) => b.citizenIdMasked.localeCompare(a.citizenIdMasked));
+    return list.sort((a, b) => b.year.localeCompare(a.year));
+  }, [filtered, sortBy]);
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [deferredQ, year, rows]);
-  const visibleRows = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
-  const hasMore = visibleRows.length < filtered.length;
+  }, [deferredQ, year, rows, workflowFilter, priorityFilter, sortBy]);
+  const visibleRows = useMemo(() => sortedFiltered.slice(0, visibleCount), [sortedFiltered, visibleCount]);
+  const hasMore = visibleRows.length < sortedFiltered.length;
   const visibleKeys = useMemo(() => visibleRows.map((r) => `tax:${r.citizenIdMasked}:${r.year}`), [visibleRows]);
   const selectedCount = useMemo(() => visibleKeys.filter((k) => selectedKeys[k]).length, [visibleKeys, selectedKeys]);
   useEffect(() => {
@@ -156,6 +223,22 @@ export default function TaxPage() {
     }
     return sum;
   }, [filtered, workflowState]);
+  const prioritySummary = useMemo(() => {
+    const sum: Record<TaxPriority, number> = { สูง: 0, กลาง: 0, ปกติ: 0 };
+    for (const r of sortedFiltered) {
+      const key = `tax:${r.citizenIdMasked}:${r.year}`;
+      const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+      sum[resolveTaxPriority(r, workflow)] += 1;
+    }
+    return sum;
+  }, [sortedFiltered, workflowState]);
+  const highPriorityRows = useMemo(() => {
+    return sortedFiltered.filter((r) => {
+      const key = `tax:${r.citizenIdMasked}:${r.year}`;
+      const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+      return resolveTaxPriority(r, workflow) === "สูง";
+    });
+  }, [sortedFiltered, workflowState]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
       setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
@@ -227,6 +310,19 @@ export default function TaxPage() {
     () => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
     [],
   );
+  const resetSavedView = () => {
+    setQ("");
+    setYear("ทั้งหมด");
+    setWorkflowFilter("all");
+    setPriorityFilter("all");
+    setSortBy("year_desc");
+    setUsingSavedView(false);
+    try {
+      window.localStorage.removeItem(TAX_VIEW_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  };
   const copySupportTrace = async () => {
     const line = `req=${apiDiag.requestId || "-"}${apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}${apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}`;
     try {
@@ -274,6 +370,12 @@ export default function TaxPage() {
             สถานะในตาราง: อ่านจากคอลัมน์ {taxMeta.status_mapping.column || "?"}
           </p>
         ) : null}
+        <p className="mt-1 text-xs text-slate-500">
+          เกณฑ์ Priority: สูง=งานอยู่ในคิวตรวจสอบ/ตีกลับ, กลาง=กำลังจัดทำ, ปกติ=พร้อมดาวน์โหลด
+        </p>
+        {usingSavedView ? (
+          <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
+        ) : null}
 
         <section className="scheme-light mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
@@ -298,8 +400,58 @@ export default function TaxPage() {
               ))}
             </select>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              พบรายการ: <span className="font-semibold text-slate-900">{filtered.length}</span>
+              พบรายการ: <span className="font-semibold text-slate-900">{sortedFiltered.length}</span>
               {q !== deferredQ ? <span className="ml-2 text-xs text-slate-400">กำลังกรอง...</span> : null}
+            </div>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "year_desc" | "name_asc" | "id_desc")}
+            >
+              <option value="year_desc">เรียง: ปีล่าสุดก่อน</option>
+              <option value="name_asc">เรียง: ชื่อ ก-ฮ</option>
+              <option value="id_desc">เรียง: เลขบัตรล่าสุดก่อน</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as "all" | TaxPriority)}
+            >
+              <option value="all">priority: ทั้งหมด</option>
+              <option value="สูง">priority: สูง</option>
+              <option value="กลาง">priority: กลาง</option>
+              <option value="ปกติ">priority: ปกติ</option>
+            </select>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setPriorityFilter("สูง");
+                  setWorkflowFilter("all");
+                  setSortBy("year_desc");
+                }}
+              >
+                preset: คิวเร่งด่วน
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={() => {
+                  resetSavedView();
+                }}
+              >
+                preset: เคลียร์ทั้งหมด
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={resetSavedView}
+              >
+                รีเซ็ตมุมมอง
+              </button>
             </div>
           </div>
           <div className="no-print mt-3 flex gap-2">
@@ -307,18 +459,36 @@ export default function TaxPage() {
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() => {
-                void trackAudit("tax", "export_csv", filtered.length);
-                void exportTaxCsv(filtered);
+                void trackAudit("tax", "export_csv", sortedFiltered.length);
+                void exportTaxCsv(sortedFiltered, (row) => {
+                  const key = `tax:${row.citizenIdMasked}:${row.year}`;
+                  const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(row.status);
+                  return resolveTaxPriority(row, workflow);
+                });
               }}
             >
               Export CSV
             </button>
             <button
               type="button"
+              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
+              onClick={() => {
+                void trackAudit("tax", "export_csv", highPriorityRows.length);
+                void exportTaxCsv(highPriorityRows, (row) => {
+                  const key = `tax:${row.citizenIdMasked}:${row.year}`;
+                  const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(row.status);
+                  return resolveTaxPriority(row, workflow);
+                });
+              }}
+            >
+              Export คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() =>
-                printTaxReport(filtered.length, () => {
-                  setVisibleCount(filtered.length);
+                printTaxReport(sortedFiltered.length, () => {
+                  setVisibleCount(sortedFiltered.length);
                 })
               }
             >
@@ -362,6 +532,29 @@ export default function TaxPage() {
               ล้างตัวกรองสถานะงาน
             </button>
           </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "สูง" ? "border-rose-500 bg-rose-100 text-rose-900" : "border-rose-300 bg-rose-50 text-rose-800"}`}
+              onClick={() => setPriorityFilter("สูง")}
+            >
+              คิวสูง: {prioritySummary["สูง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "กลาง" ? "border-amber-500 bg-amber-100 text-amber-900" : "border-amber-300 bg-amber-50 text-amber-800"}`}
+              onClick={() => setPriorityFilter("กลาง")}
+            >
+              คิวกลาง: {prioritySummary["กลาง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "ปกติ" ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}
+              onClick={() => setPriorityFilter("ปกติ")}
+            >
+              คิวปกติ: {prioritySummary["ปกติ"]}
+            </button>
+          </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>
             <button type="button" className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800" onClick={() => void bulkApply("in_review")}>รับเรื่องที่เลือก</button>
@@ -399,7 +592,7 @@ export default function TaxPage() {
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               >
                 แสดงเพิ่มอีก {PAGE_SIZE.toLocaleString("th-TH")} แถว (เหลืออีก{" "}
-                {(filtered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
+                {(sortedFiltered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
               </button>
             </div>
           ) : null}
@@ -414,6 +607,7 @@ export default function TaxPage() {
                   <th className="py-2">ชื่อ-นามสกุล</th>
                   <th className="py-2">ปีภาษี</th>
                   <th className="py-2">สถานะเอกสาร</th>
+                  <th className="py-2 no-print">Priority</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>
@@ -438,6 +632,14 @@ export default function TaxPage() {
                     <td className="py-2">{r.fullName}</td>
                     <td className="py-2">{r.year}</td>
                     <td className="py-2">{r.status}</td>
+                    <td className="py-2 no-print">
+                      {(() => {
+                        const key = `tax:${r.citizenIdMasked}:${r.year}`;
+                        const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+                        const priority = resolveTaxPriority(r, workflow);
+                        return <span className={`rounded-md border px-2 py-0.5 text-xs ${taxPriorityClass(priority)}`}>{priority}</span>;
+                      })()}
+                    </td>
                     <td className="py-2 no-print">
                       {(() => {
                         const key = `tax:${r.citizenIdMasked}:${r.year}`;

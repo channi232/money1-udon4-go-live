@@ -15,6 +15,23 @@ import {
 import { fetchWorkflowMap, saveWorkflowStatus, type WorkflowMeta } from "@/lib/workflow-state-api";
 import WorkflowHistoryModal from "@/components/workflow-history-modal";
 
+type SlipPriority = "สูง" | "กลาง" | "ปกติ";
+
+function resolveSlipPriority(row: SlipRow, workflow: WorkflowStatus): SlipPriority {
+  if (workflow === "rejected") return "สูง";
+  if (workflow === "in_review" && row.net >= 500000) return "สูง";
+  if (workflow === "in_review" || row.net >= 300000) return "กลาง";
+  return "ปกติ";
+}
+
+function slipPriorityClass(priority: SlipPriority): string {
+  if (priority === "สูง") return "border-rose-300 bg-rose-50 text-rose-800";
+  if (priority === "กลาง") return "border-amber-300 bg-amber-50 text-amber-800";
+  return "border-emerald-300 bg-emerald-50 text-emerald-800";
+}
+
+const SLIP_VIEW_STORAGE_KEY = "slip-module-view-v1";
+
 function toThaiMonthLabel(value: string): string {
   const raw = String(value || "").trim();
   const m = raw.match(/^(\d{1,2})\/(\d{4})$/);
@@ -40,14 +57,15 @@ function toThaiMonthLabel(value: string): string {
   return `${thaiMonths[month]} ${year}`;
 }
 
-async function exportSlipCsv(rows: SlipRow[]) {
+async function exportSlipCsv(rows: SlipRow[], getPriority: (row: SlipRow) => SlipPriority) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["งวดเดือน", "เลขบุคลากร", "ชื่อ-นามสกุล", "ยอดสุทธิ"];
+  const header = ["งวดเดือน", "เลขบุคลากร", "ชื่อ-นามสกุล", "ยอดสุทธิ", "Priority"];
   const dataRows = rows.map((r) => [
     toThaiMonthLabel(r.month),
     r.employeeId,
     r.fullName === r.employeeId ? "-" : r.fullName,
     String(r.net),
+    getPriority(r),
   ]);
   await exportCsvChunked({
     filename: `slip-report-${stamp}.csv`,
@@ -74,6 +92,8 @@ export default function SlipPage() {
   const [q, setQ] = useState("");
   const deferredQ = useDeferredValue(q);
   const [month, setMonth] = useState("ทั้งหมด");
+  const [sortBy, setSortBy] = useState<"month_desc" | "net_desc" | "net_asc" | "id_desc">("month_desc");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | SlipPriority>("all");
   const [workflowFilter, setWorkflowFilter] = useState<"all" | WorkflowStatus>("all");
   const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({});
   const [bulkMessage, setBulkMessage] = useState("");
@@ -86,6 +106,7 @@ export default function SlipPage() {
   const [loading, setLoading] = useState(true);
   const [apiMessage, setApiMessage] = useState("");
   const [apiDiag, setApiDiag] = useState<{ requestId?: string; errorCode?: string; stage?: string }>({});
+  const [usingSavedView, setUsingSavedView] = useState(false);
   const [copiedTrace, setCopiedTrace] = useState(false);
 
   useEffect(() => {
@@ -112,6 +133,45 @@ export default function SlipPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(SLIP_VIEW_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        q?: string;
+        month?: string;
+        workflowFilter?: "all" | WorkflowStatus;
+        priorityFilter?: "all" | SlipPriority;
+        sortBy?: "month_desc" | "net_desc" | "net_asc" | "id_desc";
+      };
+      if (typeof saved.q === "string") setQ(saved.q);
+      if (typeof saved.month === "string") setMonth(saved.month);
+      if (saved.workflowFilter) setWorkflowFilter(saved.workflowFilter);
+      if (saved.priorityFilter) setPriorityFilter(saved.priorityFilter);
+      if (saved.sortBy) setSortBy(saved.sortBy);
+      setUsingSavedView(true);
+    } catch {
+      // ignore invalid persisted view
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        SLIP_VIEW_STORAGE_KEY,
+        JSON.stringify({
+          q,
+          month,
+          workflowFilter,
+          priorityFilter,
+          sortBy,
+        }),
+      );
+    } catch {
+      // ignore storage write failure
+    }
+  }, [q, month, workflowFilter, priorityFilter, sortBy]);
 
   const saveWorkflowForKey = async (
     key: string,
@@ -149,17 +209,26 @@ export default function SlipPage() {
       const matchesMonth = month === "ทั้งหมด" || monthLabel === month;
       const key = `slip:${r.employeeId}:${r.month}`;
       const workflow = workflowState[key]?.status ?? "new";
+      const priority = resolveSlipPriority(r, workflow);
       const matchesWorkflow = workflowFilter === "all" || workflow === workflowFilter;
-      return matchesQ && matchesMonth && matchesWorkflow;
+      const matchesPriority = priorityFilter === "all" || priority === priorityFilter;
+      return matchesQ && matchesMonth && matchesWorkflow && matchesPriority;
     });
-  }, [deferredQ, month, rows, workflowState, workflowFilter]);
+  }, [deferredQ, month, rows, workflowState, workflowFilter, priorityFilter]);
+  const sortedFiltered = useMemo(() => {
+    const list = [...filtered];
+    if (sortBy === "net_desc") return list.sort((a, b) => b.net - a.net);
+    if (sortBy === "net_asc") return list.sort((a, b) => a.net - b.net);
+    if (sortBy === "id_desc") return list.sort((a, b) => b.employeeId.localeCompare(a.employeeId));
+    return list.sort((a, b) => b.month.localeCompare(a.month));
+  }, [filtered, sortBy]);
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [deferredQ, month, rows]);
-  const visibleRows = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
-  const hasMore = visibleRows.length < filtered.length;
+  }, [deferredQ, month, rows, workflowFilter, priorityFilter, sortBy]);
+  const visibleRows = useMemo(() => sortedFiltered.slice(0, visibleCount), [sortedFiltered, visibleCount]);
+  const hasMore = visibleRows.length < sortedFiltered.length;
   const visibleKeys = useMemo(() => visibleRows.map((r) => `slip:${r.employeeId}:${r.month}`), [visibleRows]);
   const selectedCount = useMemo(() => visibleKeys.filter((k) => selectedKeys[k]).length, [visibleKeys, selectedKeys]);
   useEffect(() => {
@@ -178,6 +247,22 @@ export default function SlipPage() {
     }
     return sum;
   }, [filtered, workflowState]);
+  const prioritySummary = useMemo(() => {
+    const sum: Record<SlipPriority, number> = { สูง: 0, กลาง: 0, ปกติ: 0 };
+    for (const r of sortedFiltered) {
+      const key = `slip:${r.employeeId}:${r.month}`;
+      const workflow = workflowState[key]?.status ?? "new";
+      sum[resolveSlipPriority(r, workflow)] += 1;
+    }
+    return sum;
+  }, [sortedFiltered, workflowState]);
+  const highPriorityRows = useMemo(() => {
+    return sortedFiltered.filter((r) => {
+      const key = `slip:${r.employeeId}:${r.month}`;
+      const workflow = workflowState[key]?.status ?? "new";
+      return resolveSlipPriority(r, workflow) === "สูง";
+    });
+  }, [sortedFiltered, workflowState]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
       setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
@@ -249,6 +334,19 @@ export default function SlipPage() {
     () => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
     [],
   );
+  const resetSavedView = () => {
+    setQ("");
+    setMonth("ทั้งหมด");
+    setWorkflowFilter("all");
+    setPriorityFilter("all");
+    setSortBy("month_desc");
+    setUsingSavedView(false);
+    try {
+      window.localStorage.removeItem(SLIP_VIEW_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  };
   const copySupportTrace = async () => {
     const line = `req=${apiDiag.requestId || "-"}${apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}${apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}`;
     try {
@@ -270,6 +368,12 @@ export default function SlipPage() {
           <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง (fallback)"}</span>
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
+        <p className="mt-1 text-xs text-slate-500">
+          เกณฑ์ Priority: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
+        </p>
+        {usingSavedView ? (
+          <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
+        ) : null}
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
             <p>
@@ -310,8 +414,57 @@ export default function SlipPage() {
               ))}
             </select>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              พบรายการ: <span className="font-semibold text-slate-900">{filtered.length}</span>
+              พบรายการ: <span className="font-semibold text-slate-900">{sortedFiltered.length}</span>
               {q !== deferredQ ? <span className="ml-2 text-xs text-slate-400">กำลังกรอง...</span> : null}
+            </div>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "month_desc" | "net_desc" | "net_asc" | "id_desc")}
+            >
+              <option value="month_desc">เรียง: งวดล่าสุดก่อน</option>
+              <option value="net_desc">เรียง: ยอดสุทธิสูงก่อน</option>
+              <option value="net_asc">เรียง: ยอดสุทธิต่ำก่อน</option>
+              <option value="id_desc">เรียง: เลขบุคลากรล่าสุดก่อน</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700"
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as "all" | SlipPriority)}
+            >
+              <option value="all">priority: ทั้งหมด</option>
+              <option value="สูง">priority: สูง</option>
+              <option value="กลาง">priority: กลาง</option>
+              <option value="ปกติ">priority: ปกติ</option>
+            </select>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setPriorityFilter("สูง");
+                  setWorkflowFilter("all");
+                  setSortBy("net_desc");
+                }}
+              >
+                preset: คิวเร่งด่วน
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={resetSavedView}
+              >
+                preset: เคลียร์ทั้งหมด
+              </button>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 hover:bg-slate-100"
+                onClick={resetSavedView}
+              >
+                รีเซ็ตมุมมอง
+              </button>
             </div>
           </div>
           <div className="no-print mt-3 flex gap-2">
@@ -319,18 +472,36 @@ export default function SlipPage() {
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() => {
-                void trackAudit("slip", "export_csv", filtered.length);
-                void exportSlipCsv(filtered);
+                void trackAudit("slip", "export_csv", sortedFiltered.length);
+                void exportSlipCsv(sortedFiltered, (row) => {
+                  const key = `slip:${row.employeeId}:${row.month}`;
+                  const workflow = workflowState[key]?.status ?? "new";
+                  return resolveSlipPriority(row, workflow);
+                });
               }}
             >
               Export CSV
             </button>
             <button
               type="button"
+              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
+              onClick={() => {
+                void trackAudit("slip", "export_csv", highPriorityRows.length);
+                void exportSlipCsv(highPriorityRows, (row) => {
+                  const key = `slip:${row.employeeId}:${row.month}`;
+                  const workflow = workflowState[key]?.status ?? "new";
+                  return resolveSlipPriority(row, workflow);
+                });
+              }}
+            >
+              Export คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() =>
-                printSlipReport(filtered.length, () => {
-                  setVisibleCount(filtered.length);
+                printSlipReport(sortedFiltered.length, () => {
+                  setVisibleCount(sortedFiltered.length);
                 })
               }
             >
@@ -374,6 +545,29 @@ export default function SlipPage() {
               ล้างตัวกรองสถานะงาน
             </button>
           </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "สูง" ? "border-rose-500 bg-rose-100 text-rose-900" : "border-rose-300 bg-rose-50 text-rose-800"}`}
+              onClick={() => setPriorityFilter("สูง")}
+            >
+              คิวสูง: {prioritySummary["สูง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "กลาง" ? "border-amber-500 bg-amber-100 text-amber-900" : "border-amber-300 bg-amber-50 text-amber-800"}`}
+              onClick={() => setPriorityFilter("กลาง")}
+            >
+              คิวกลาง: {prioritySummary["กลาง"]}
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-3 py-2 text-left ${priorityFilter === "ปกติ" ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}
+              onClick={() => setPriorityFilter("ปกติ")}
+            >
+              คิวปกติ: {prioritySummary["ปกติ"]}
+            </button>
+          </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>
             <button type="button" className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800" onClick={() => void bulkApply("in_review")}>รับเรื่องที่เลือก</button>
@@ -411,7 +605,7 @@ export default function SlipPage() {
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               >
                 แสดงเพิ่มอีก {PAGE_SIZE.toLocaleString("th-TH")} แถว (เหลืออีก{" "}
-                {(filtered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
+                {(sortedFiltered.length - visibleRows.length).toLocaleString("th-TH")} แถว)
               </button>
             </div>
           ) : null}
@@ -426,6 +620,7 @@ export default function SlipPage() {
                   <th className="py-2">เลขบุคลากร</th>
                   <th className="py-2">ชื่อ-นามสกุล</th>
                   <th className="py-2">ยอดสุทธิ</th>
+                  <th className="py-2 no-print">Priority</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>
@@ -450,6 +645,14 @@ export default function SlipPage() {
                     <td className="py-2 font-medium">{r.employeeId}</td>
                     <td className="py-2">{r.fullName === r.employeeId ? "-" : r.fullName}</td>
                     <td className="py-2">{r.net.toLocaleString()} บาท</td>
+                    <td className="py-2 no-print">
+                      {(() => {
+                        const key = `slip:${r.employeeId}:${r.month}`;
+                        const workflow = workflowState[key]?.status ?? "new";
+                        const priority = resolveSlipPriority(r, workflow);
+                        return <span className={`rounded-md border px-2 py-0.5 text-xs ${slipPriorityClass(priority)}`}>{priority}</span>;
+                      })()}
+                    </td>
                     <td className="py-2 no-print">
                       {(() => {
                         const key = `slip:${r.employeeId}:${r.month}`;

@@ -29,3 +29,6 @@ New isolated project workspace for the unified finance platform.
 - `docs/GO_LIVE_RUNBOOK_TH.md` - คู่มือขั้นตอนวัน Go-Live
 - `docs/POST_GO_LIVE_24H_MONITORING_TH.md` - เช็กลิสต์เฝ้าระวัง 24 ชั่วโมงแรกหลังเปิดใช้งาน
 - `docs/INCIDENT_TEMPLATE_TH.md` - แบบฟอร์มบันทึก incident สำหรับทีม support/ops
+- `docs/PRE_MODULE_KICKOFF_CHECKLIST_TH.md` - เช็กลิสต์ปิดงานก่อนเริ่มพัฒนาเชิงลึก 3 โมดูล
+- `docs/PRIORITY_POLICY_TH.md` - เกณฑ์ Priority กลางสำหรับ money/tax/slip
+- `docs/SPRINT1_REGRESSION_CHECKLIST_TH.md` - เช็กลิสต์ regression ก่อนปล่อยงานรอบย่อย

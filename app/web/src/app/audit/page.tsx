@@ -656,7 +656,7 @@ export default function AuditPage() {
             </select>
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400"
-              placeholder="ค้นหา username"
+              placeholder="ค้นหาชื่อผู้ใช้งาน"
               value={usernameFilter}
               onChange={(e) => {
                 setLoading(true);
@@ -1071,7 +1071,7 @@ export default function AuditPage() {
                 <div className="mb-3 grid gap-2 md:grid-cols-3">
                   <input
                     className="md:col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    placeholder="ค้นหาใน timeline (ผู้แก้/สถานะ/เวลา)"
+                    placeholder="ค้นหาในไทม์ไลน์ (ผู้แก้/สถานะ/เวลา)"
                     value={timelineQuery}
                     onChange={(e) => setTimelineQuery(e.target.value)}
                   />

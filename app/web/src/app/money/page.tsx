@@ -379,10 +379,10 @@ export default function MoneyPage() {
             กลับหน้าหลักระบบจัดการ
           </Link>
         </div>
-        <p className="mt-3 text-slate-600">ตารางรายการการเงินแบบอ่านอย่างเดียว (Read-only)</p>
+        <p className="mt-3 text-slate-600">ตารางรายการการเงินแบบอ่านอย่างเดียว</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}
-          <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง (fallback)"}</span>
+          <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง"}</span>
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
@@ -428,7 +428,7 @@ export default function MoneyPage() {
           <div className="no-print grid gap-3 md:grid-cols-3">
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400"
-              placeholder="ค้นหา: รหัส/ชื่อ/สถานะ/workflow/จำนวนเงิน/งวดข้อมูล"
+              placeholder="ค้นหา: รหัส/ชื่อ/สถานะงาน/จำนวนเงิน/งวดข้อมูล"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -463,10 +463,10 @@ export default function MoneyPage() {
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as "all" | MoneyPriority)}
             >
-              <option value="all">priority: ทั้งหมด</option>
-              <option value="สูง">priority: สูง</option>
-              <option value="กลาง">priority: กลาง</option>
-              <option value="ปกติ">priority: ปกติ</option>
+              <option value="all">ระดับความสำคัญ: ทั้งหมด</option>
+              <option value="สูง">ระดับความสำคัญ: สูง</option>
+              <option value="กลาง">ระดับความสำคัญ: กลาง</option>
+              <option value="ปกติ">ระดับความสำคัญ: ปกติ</option>
             </select>
             <div className="flex flex-wrap gap-2">
               <button
@@ -496,7 +496,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
-                title="เรียงยอดเงินสูงสุดและล้างตัวกรอง priority"
+                title="เรียงยอดเงินสูงสุดและล้างตัวกรองระดับความสำคัญ"
                 onClick={() => {
                   setStatus("ทั้งหมด");
                   setWorkflowFilter("all");
@@ -527,7 +527,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
-                title="โฟกัสเฉพาะรายการ priority สูง"
+                title="โฟกัสเฉพาะรายการระดับความสำคัญสูง"
                 onClick={() => {
                   setPriorityFilter("สูง");
                   setWorkflowFilter("all");
@@ -557,7 +557,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
-              title="ส่งออกเฉพาะรายการ priority สูง"
+              title="ส่งออกเฉพาะรายการระดับความสำคัญสูง"
               onClick={() => {
                 void trackAudit("money", "export_csv", highPriorityRows.length);
                 void exportMoneyCsv(highPriorityRows, (row) => {
@@ -572,7 +572,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
-              title="พิมพ์รายงานเฉพาะรายการ priority สูง"
+              title="พิมพ์รายงานเฉพาะรายการระดับความสำคัญสูง"
               onClick={() =>
                 printMoneyReport(highPriorityRows.length, () => {
                   setQ("");
@@ -713,7 +713,7 @@ export default function MoneyPage() {
           ) : null}
 
           <div className="mt-4 overflow-x-auto">
-            {loading ? <p className="pb-2 text-sm text-slate-500">กำลังโหลดข้อมูลจาก API...</p> : null}
+            {loading ? <p className="pb-2 text-sm text-slate-500">กำลังโหลดข้อมูลจากระบบบริการ...</p> : null}
             <table className="w-full min-w-[760px] text-sm text-slate-900">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">

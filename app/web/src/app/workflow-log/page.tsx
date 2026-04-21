@@ -91,7 +91,7 @@ export default function WorkflowLogPage() {
     <AuthGuard allowedRoles={["admin"]}>
       <main className="scheme-light mx-auto min-h-screen w-full max-w-[1400px] px-6 py-10 text-slate-900">
         <h1 className="text-3xl font-bold">บันทึกการเปลี่ยนสถานะงาน</h1>
-        <p className="mt-2 text-sm text-slate-600">มุมมองสำหรับตรวจสอบ transition จริงจาก backend (append-only) ใช้สำหรับ UAT และตรวจย้อนหลัง</p>
+        <p className="mt-2 text-sm text-slate-600">มุมมองสำหรับตรวจสอบการเปลี่ยนสถานะจริงจากระบบหลังบ้าน (เพิ่มต่อเนื่องเท่านั้น) ใช้สำหรับ UAT และตรวจย้อนหลัง</p>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid gap-2 md:grid-cols-4">
@@ -111,10 +111,10 @@ export default function WorkflowLogPage() {
               onChange={(e) => setFromFilter(e.target.value)}
             >
               <option value="ทั้งหมด">สถานะเดิมทั้งหมด</option>
-              <option value="new">new</option>
-              <option value="in_review">in_review</option>
-              <option value="approved">approved</option>
-              <option value="rejected">rejected</option>
+              <option value="new">ใหม่</option>
+              <option value="in_review">กำลังตรวจสอบ</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="rejected">ตีกลับ</option>
             </select>
             <select
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -122,26 +122,26 @@ export default function WorkflowLogPage() {
               onChange={(e) => setToFilter(e.target.value)}
             >
               <option value="ทั้งหมด">สถานะใหม่ทั้งหมด</option>
-              <option value="new">new</option>
-              <option value="in_review">in_review</option>
-              <option value="approved">approved</option>
-              <option value="rejected">rejected</option>
+              <option value="new">ใหม่</option>
+              <option value="in_review">กำลังตรวจสอบ</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="rejected">ตีกลับ</option>
             </select>
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="ค้นหา key"
+              placeholder="ค้นหารหัสรายการ"
               value={keyFilter}
               onChange={(e) => setKeyFilter(e.target.value)}
             />
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="ค้นหา by (username)"
+              placeholder="ค้นหาผู้ดำเนินการ (ชื่อผู้ใช้งาน)"
               value={byFilter}
               onChange={(e) => setByFilter(e.target.value)}
             />
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="ค้นหาอิสระ (reason/id/keyword)"
+              placeholder="ค้นหาอิสระ (เหตุผล/รหัส/คำสำคัญ)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />

@@ -383,7 +383,7 @@ export default function SlipPage() {
         <p className="mt-3 text-slate-600">ค้นหาและดูรายการสลิปเงินเดือนแบบอ่านอย่างเดียว</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}
-          <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง (fallback)"}</span>
+          <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง"}</span>
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
         <p className="mt-1 text-xs text-slate-500">
@@ -452,10 +452,10 @@ export default function SlipPage() {
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as "all" | SlipPriority)}
             >
-              <option value="all">priority: ทั้งหมด</option>
-              <option value="สูง">priority: สูง</option>
-              <option value="กลาง">priority: กลาง</option>
-              <option value="ปกติ">priority: ปกติ</option>
+              <option value="all">ระดับความสำคัญ: ทั้งหมด</option>
+              <option value="สูง">ระดับความสำคัญ: สูง</option>
+              <option value="กลาง">ระดับความสำคัญ: กลาง</option>
+              <option value="ปกติ">ระดับความสำคัญ: ปกติ</option>
             </select>
             <div className="flex flex-wrap gap-2">
               <button
@@ -487,7 +487,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
-                title="เรียงยอดสุทธิสูงสุดและล้างตัวกรอง priority"
+                title="เรียงยอดสุทธิสูงสุดและล้างตัวกรองระดับความสำคัญ"
                 onClick={() => {
                   setMonth("ทั้งหมด");
                   setWorkflowFilter("all");
@@ -500,7 +500,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
-                title="โฟกัสเฉพาะรายการ priority สูง"
+                title="โฟกัสเฉพาะรายการระดับความสำคัญสูง"
                 onClick={() => {
                   setPriorityFilter("สูง");
                   setWorkflowFilter("all");
@@ -546,7 +546,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
-              title="ส่งออกเฉพาะรายการ priority สูง"
+              title="ส่งออกเฉพาะรายการระดับความสำคัญสูง"
               onClick={() => {
                 void trackAudit("slip", "export_csv", highPriorityRows.length);
                 void exportSlipCsv(highPriorityRows, (row) => {
@@ -561,7 +561,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
-              title="พิมพ์รายงานเฉพาะรายการ priority สูง"
+              title="พิมพ์รายงานเฉพาะรายการระดับความสำคัญสูง"
               onClick={() =>
                 printSlipReport(highPriorityRows.length, () => {
                   setQ("");
@@ -702,7 +702,7 @@ export default function SlipPage() {
           ) : null}
 
           <div className="mt-4 overflow-x-auto">
-            {loading ? <p className="pb-2 text-sm text-slate-500">กำลังโหลดข้อมูลจาก API...</p> : null}
+            {loading ? <p className="pb-2 text-sm text-slate-500">กำลังโหลดข้อมูลจากระบบบริการ...</p> : null}
             <table className="w-full min-w-[760px] text-sm text-slate-900">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">

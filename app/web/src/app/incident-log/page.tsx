@@ -27,7 +27,7 @@ const defaultRows: IncidentRow[] = [
     module: "platform",
     impact: "ผู้ใช้บางส่วนรีเฟรชแล้วโหลดช้า",
     action: "ตรวจทรัพยากรเซิร์ฟเวอร์และยืนยัน API ตอบกลับปกติ",
-    owner: "System Admin",
+    owner: "ผู้ดูแลระบบ",
     status: "resolved",
     trace: "req=- | code=- | stage=-",
   },
@@ -37,9 +37,9 @@ const defaultRows: IncidentRow[] = [
     shift: "-",
     severity: "P3",
     module: "slip",
-    impact: "ผู้ใช้สอบถามความหมายสถานะ fallback",
-    action: "อธิบายความหมายและยืนยัน source=database ปัจจุบัน",
-    owner: "Personnel Lead",
+    impact: "ผู้ใช้สอบถามความหมายสถานะข้อมูลสำรอง",
+    action: "อธิบายความหมายและยืนยันแหล่งข้อมูลปัจจุบัน",
+    owner: "หัวหน้างานบุคคล",
     status: "resolved",
     trace: "req=- | code=- | stage=-",
   },
@@ -50,8 +50,8 @@ const defaultRows: IncidentRow[] = [
     severity: "P2",
     module: "tax",
     impact: "พบรายการค้นหาไม่ตรงความคาดหวัง 1 ราย",
-    action: "ตรวจข้อมูลต้นทางและยืนยันข้อมูล master ก่อนปิดประเด็น",
-    owner: "Finance Lead",
+    action: "ตรวจข้อมูลต้นทางและยืนยันข้อมูลหลักก่อนปิดประเด็น",
+    owner: "หัวหน้างานการเงิน",
     status: "monitoring",
     trace: "req=tax_summary-abcd1234 | code=- | stage=ok",
   },
@@ -59,7 +59,7 @@ const defaultRows: IncidentRow[] = [
 
 function exportIncidentCsv(rows: IncidentRow[]) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เวลา", "ช่วงปฏิบัติงาน", "ความรุนแรง", "โมดูล", "ผลกระทบ", "การดำเนินการ", "ผู้รับผิดชอบ", "สถานะ", "support_trace"];
+  const header = ["เวลา", "ช่วงปฏิบัติงาน", "ระดับความรุนแรง", "โมดูล", "ผลกระทบ", "การดำเนินการ", "ผู้รับผิดชอบ", "สถานะ", "รหัสติดตามสนับสนุน"];
   const lines = rows.map((r) =>
     [r.time, r.shift, r.severity, r.module, r.impact, r.action, r.owner, r.status, r.trace]
       .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
@@ -188,7 +188,7 @@ export default function IncidentLogPage() {
     };
   }, [visibleRows]);
   const copyIncidentLine = async () => {
-    const line = `Trace: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
+    const line = `รหัสติดตาม: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
     try {
       await navigator.clipboard.writeText(line);
       setCopied(true);
@@ -222,7 +222,7 @@ export default function IncidentLogPage() {
     setRows((prev) => prev.filter((r) => r.id !== id));
   };
   const resetIncidents = () => {
-    const ok = window.confirm("ยืนยันล้าง incident log ทั้งหมดและกลับค่าเริ่มต้น?");
+    const ok = window.confirm("ยืนยันล้างบันทึกเหตุการณ์ทั้งหมดและกลับค่าเริ่มต้น?");
     if (!ok) return;
     setRows(defaultRows);
   };
@@ -230,8 +230,8 @@ export default function IncidentLogPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Incident Log (T-0 ถึง T+24h)</h1>
-        <p className="mt-3 text-slate-600">บันทึกเหตุการณ์ช่วงเปิดใช้งานจริงเพื่อใช้ติดตามและสรุปผลแบบ audit-ready</p>
+        <h1 className="text-3xl font-bold">บันทึกเหตุการณ์ (T-0 ถึง T+24h)</h1>
+        <p className="mt-3 text-slate-600">บันทึกเหตุการณ์ช่วงเปิดใช้งานจริงเพื่อใช้ติดตามและสรุปผลให้ตรวจสอบย้อนหลังได้</p>
 
         <div className="no-print mt-3 flex gap-2">
           <button
@@ -239,27 +239,27 @@ export default function IncidentLogPage() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => exportIncidentCsv(visibleRows)}
           >
-            Export Incident CSV (ตามตัวกรอง)
+            ส่งออก CSV บันทึกเหตุการณ์ (ตามตัวกรอง)
           </button>
           <button
             type="button"
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => window.print()}
           >
-            พิมพ์ Incident Log
+            พิมพ์รายงานบันทึกเหตุการณ์
           </button>
           <button
             type="button"
             className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-100"
             onClick={resetIncidents}
           >
-            รีเซ็ต Incident Log
+            รีเซ็ตบันทึกเหตุการณ์
           </button>
         </div>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงาน Incident Log</h2>
+            <h2 className="text-xl font-bold">รายงานบันทึกเหตุการณ์</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
           </div>
 
@@ -269,7 +269,7 @@ export default function IncidentLogPage() {
           <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-6">
             <input
               className="rounded border border-slate-300 bg-white px-2 py-1"
-              placeholder="ค้นหา impact/action/owner/trace/shift"
+              placeholder="ค้นหา ผลกระทบ/การดำเนินการ/ผู้รับผิดชอบ/รหัสติดตาม/ช่วงปฏิบัติงาน"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -278,10 +278,10 @@ export default function IncidentLogPage() {
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value as "all" | IncidentRow["severity"])}
             >
-              <option value="all">severity: ทั้งหมด</option>
-              <option value="P1">severity: P1</option>
-              <option value="P2">severity: P2</option>
-              <option value="P3">severity: P3</option>
+              <option value="all">ระดับความรุนแรง: ทั้งหมด</option>
+              <option value="P1">ระดับความรุนแรง: P1</option>
+              <option value="P2">ระดับความรุนแรง: P2</option>
+              <option value="P3">ระดับความรุนแรง: P3</option>
             </select>
             <select
               className="rounded border border-slate-300 bg-white px-2 py-1"
@@ -302,21 +302,21 @@ export default function IncidentLogPage() {
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value as "all" | IncidentRow["module"])}
             >
-              <option value="all">module: ทั้งหมด</option>
-              <option value="platform">module: platform</option>
-              <option value="money">module: money</option>
-              <option value="tax">module: tax</option>
-              <option value="slip">module: slip</option>
+              <option value="all">โมดูล: ทั้งหมด</option>
+              <option value="platform">โมดูล: ระบบกลาง</option>
+              <option value="money">โมดูล: การเงิน</option>
+              <option value="tax">โมดูล: ภาษี</option>
+              <option value="slip">โมดูล: สลิป</option>
             </select>
             <select
               className="rounded border border-slate-300 bg-white px-2 py-1"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "all" | IncidentRow["status"])}
             >
-              <option value="all">status: ทั้งหมด</option>
-              <option value="open">status: open</option>
-              <option value="monitoring">status: monitoring</option>
-              <option value="resolved">status: resolved</option>
+              <option value="all">สถานะ: ทั้งหมด</option>
+              <option value="open">สถานะ: เปิดประเด็น</option>
+              <option value="monitoring">สถานะ: เฝ้าระวัง</option>
+              <option value="resolved">สถานะ: ปิดประเด็น</option>
             </select>
             <button
               type="button"
@@ -340,7 +340,7 @@ export default function IncidentLogPage() {
               <option value="newest">เรียง: ล่าสุดก่อน</option>
               <option value="oldest">เรียง: เก่าสุดก่อน</option>
               <option value="severity_high">เรียง: ความรุนแรงสูงก่อน</option>
-              <option value="status">เรียง: สถานะ open ก่อน</option>
+              <option value="status">เรียง: สถานะเปิดประเด็นก่อน</option>
             </select>
           </div>
           <div className="no-print mt-2 flex flex-wrap gap-2 text-xs">
@@ -355,7 +355,7 @@ export default function IncidentLogPage() {
                 setSortBy("severity_high");
               }}
             >
-              preset: open ทั้งหมด
+              มุมมองด่วน: เปิดประเด็นทั้งหมด
             </button>
             <button
               type="button"
@@ -368,7 +368,7 @@ export default function IncidentLogPage() {
                 setSortBy("newest");
               }}
             >
-              preset: เฉพาะ P1
+              มุมมองด่วน: เฉพาะ P1
             </button>
             <button
               type="button"
@@ -381,7 +381,7 @@ export default function IncidentLogPage() {
                 setSortBy("newest");
               }}
             >
-              preset: platform ล่าสุด
+              มุมมองด่วน: ระบบกลางล่าสุด
             </button>
             <button
               type="button"
@@ -394,7 +394,7 @@ export default function IncidentLogPage() {
                 setSortBy("newest");
               }}
             >
-              preset: monitoring
+              มุมมองด่วน: เฝ้าระวัง
             </button>
           </div>
           <div className="mt-3 grid gap-2 text-xs md:grid-cols-6">
@@ -402,13 +402,13 @@ export default function IncidentLogPage() {
               ทั้งหมด: <span className="font-semibold text-slate-900">{summary.total}</span>
             </div>
             <div className="rounded border border-rose-300 bg-rose-50 px-3 py-2 text-rose-800">
-              open: <span className="font-semibold text-rose-900">{summary.open}</span>
+              เปิดประเด็น: <span className="font-semibold text-rose-900">{summary.open}</span>
             </div>
             <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
-              monitoring: <span className="font-semibold text-amber-900">{summary.monitoring}</span>
+              เฝ้าระวัง: <span className="font-semibold text-amber-900">{summary.monitoring}</span>
             </div>
             <div className="rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-800">
-              resolved: <span className="font-semibold text-emerald-900">{summary.resolved}</span>
+              ปิดประเด็น: <span className="font-semibold text-emerald-900">{summary.resolved}</span>
             </div>
             <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
               โมดูลที่พบบ่อย: <span className="font-semibold text-indigo-900">{summary.topModule}</span>
@@ -418,11 +418,11 @@ export default function IncidentLogPage() {
             </div>
           </div>
           <div className="no-print mt-3 rounded-lg border border-indigo-300 bg-indigo-50 p-3">
-            <p className="text-sm font-semibold text-indigo-900">Trace Helper (วางจากปุ่มคัดลอก trace)</p>
+            <p className="text-sm font-semibold text-indigo-900">ตัวช่วยรหัสติดตาม (วางจากปุ่มคัดลอก trace)</p>
             <textarea
               className="mt-2 w-full rounded border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-900"
               rows={2}
-              placeholder="วาง support trace เช่น req=tax_summary-xxxx | code=TAX_QUERY_FAILED | stage=query_rows"
+              placeholder="วางรหัสติดตาม เช่น req=tax_summary-xxxx | code=TAX_QUERY_FAILED | stage=query_rows"
               value={traceInput}
               onChange={(e) => setTraceInput(e.target.value)}
             />
@@ -434,11 +434,11 @@ export default function IncidentLogPage() {
               className="mt-2 rounded border border-indigo-300 bg-white px-2 py-1 text-xs text-indigo-900 hover:bg-indigo-100"
               onClick={() => void copyIncidentLine()}
             >
-              {copied ? "คัดลอกแล้ว" : "คัดลอกบรรทัดสำหรับ Incident"}
+              {copied ? "คัดลอกแล้ว" : "คัดลอกบรรทัดสำหรับบันทึกเหตุการณ์"}
             </button>
           </div>
           <div className="no-print mt-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3">
-            <p className="text-sm font-semibold text-emerald-900">เพิ่ม Incident ใหม่</p>
+            <p className="text-sm font-semibold text-emerald-900">เพิ่มเหตุการณ์ใหม่</p>
             <div className="mt-2 grid gap-2 md:grid-cols-5">
               <input
                 className="rounded border border-emerald-200 bg-white px-2 py-1 text-sm"
@@ -503,7 +503,7 @@ export default function IncidentLogPage() {
             </div>
             <input
               className="mt-2 w-full rounded border border-emerald-200 bg-white px-2 py-1 text-sm"
-              placeholder="support trace (ไม่บังคับ - ถ้าไม่ใส่จะใช้ค่าจาก Trace Helper)"
+              placeholder="รหัสติดตามสนับสนุน (ไม่บังคับ - ถ้าไม่ใส่จะใช้ค่าจากตัวช่วยรหัสติดตาม)"
               value={form.trace}
               onChange={(e) => setForm((prev) => ({ ...prev, trace: e.target.value }))}
             />
@@ -513,7 +513,7 @@ export default function IncidentLogPage() {
                 className="rounded border border-emerald-300 bg-white px-2 py-1 text-xs text-emerald-900 hover:bg-emerald-100"
                 onClick={addIncident}
               >
-                บันทึก Incident
+                บันทึกเหตุการณ์
               </button>
               {saved ? <span className="text-xs text-emerald-800">บันทึกแล้ว</span> : null}
             </div>
@@ -525,13 +525,13 @@ export default function IncidentLogPage() {
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="py-2">เวลา</th>
                   <th className="py-2">ช่วงปฏิบัติงาน</th>
-                  <th className="py-2">Severity</th>
+                  <th className="py-2">ระดับความรุนแรง</th>
                   <th className="py-2">โมดูล</th>
                   <th className="py-2">ผลกระทบ</th>
                   <th className="py-2">การดำเนินการ</th>
                   <th className="py-2">ผู้รับผิดชอบ</th>
                   <th className="py-2">สถานะ</th>
-                  <th className="py-2">support trace</th>
+                  <th className="py-2">รหัสติดตามสนับสนุน</th>
                   <th className="py-2 no-print">จัดการ</th>
                 </tr>
               </thead>

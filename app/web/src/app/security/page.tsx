@@ -137,9 +137,9 @@ export default function SecurityPage() {
             }`}
           >
             {riskLevel === "critical"
-              ? "ALERT: ปริมาณ 429 สูงผิดปกติ ควรตรวจสอบ IP และ endpoint ที่ถูกยิงทันที"
+              ? "แจ้งเตือน: ปริมาณ 429 สูงผิดปกติ ควรตรวจสอบ IP และปลายทางที่ถูกเรียกทันที"
               : riskLevel === "warn"
-                ? "WARNING: พบแนวโน้มการยิง API เพิ่มขึ้น ควรติดตามต่อเนื่อง"
+                ? "เฝ้าระวัง: พบแนวโน้มการเรียก API เพิ่มขึ้น ควรติดตามต่อเนื่อง"
                 : "สถานะปกติ: ยังไม่พบสัญญาณโจมตีเกิน threshold"}
           </div>
           <div className="no-print mb-4 grid gap-3 md:grid-cols-4">
@@ -174,7 +174,7 @@ export default function SecurityPage() {
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 md:col-span-2">
-              <p className="text-xs text-slate-500">Top Endpoint ที่โดนจำกัด</p>
+              <p className="text-xs text-slate-500">ปลายทางที่ถูกจำกัดสูงสุด</p>
               <p className="text-sm text-slate-900">
                 {summary.top_buckets.length === 0
                   ? "-"
@@ -350,7 +350,7 @@ export default function SecurityPage() {
             {message ? <span className="ml-3 text-red-600">{message}</span> : null}
           </div>
           <div className="mt-2 text-sm text-slate-600">
-            Top IP:{" "}
+            IP ที่พบสูงสุด:{" "}
             <span className="font-semibold text-slate-900">
               {summary.top_ips.length === 0 ? "-" : summary.top_ips.map((x) => `${x.ip} (${x.count})`).join(", ")}
             </span>

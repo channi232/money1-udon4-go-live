@@ -446,6 +446,42 @@ export default function TaxPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
+                className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+                onClick={() => {
+                  setYear("ทั้งหมด");
+                  setWorkflowFilter("in_review");
+                  setPriorityFilter("all");
+                  setSortBy("year_desc");
+                }}
+              >
+                preset: รอตรวจสอบ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setYear("ทั้งหมด");
+                  setWorkflowFilter("rejected");
+                  setPriorityFilter("สูง");
+                  setSortBy("year_desc");
+                }}
+              >
+                preset: ตีกลับ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+                onClick={() => {
+                  setYear("ทั้งหมด");
+                  setWorkflowFilter("approved");
+                  setPriorityFilter("all");
+                  setSortBy("year_desc");
+                }}
+              >
+                preset: พร้อมดาวน์โหลด
+              </button>
+              <button
+                type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
                 onClick={() => {
                   setPriorityFilter("สูง");

@@ -451,6 +451,42 @@ export default function SlipPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
+                className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+                onClick={() => {
+                  setMonth("ทั้งหมด");
+                  setWorkflowFilter("in_review");
+                  setPriorityFilter("all");
+                  setSortBy("month_desc");
+                }}
+              >
+                preset: รอตรวจสอบ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                onClick={() => {
+                  setMonth("ทั้งหมด");
+                  setWorkflowFilter("rejected");
+                  setPriorityFilter("สูง");
+                  setSortBy("month_desc");
+                }}
+              >
+                preset: ตีกลับ
+              </button>
+              <button
+                type="button"
+                className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+                onClick={() => {
+                  setMonth("ทั้งหมด");
+                  setWorkflowFilter("all");
+                  setPriorityFilter("all");
+                  setSortBy("net_desc");
+                }}
+              >
+                preset: ยอดสุทธิสูงสุด
+              </button>
+              <button
+                type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
                 onClick={() => {
                   setPriorityFilter("สูง");

@@ -12,6 +12,12 @@ function riskClass(level: DailyBriefResponse["summary"]["risk_level"]) {
   return "border-emerald-300 bg-emerald-50 text-emerald-800";
 }
 
+function riskLabel(level: DailyBriefResponse["summary"]["risk_level"]): string {
+  if (level === "critical") return "วิกฤต";
+  if (level === "warn") return "เฝ้าระวัง";
+  return "ปกติ";
+}
+
 function exportDailyBriefCsv(data: DailyBriefResponse) {
   const safe = (v: unknown) => `"${String(v ?? "").replaceAll('"', '""')}"`;
   const lines: string[] = [];
@@ -74,7 +80,7 @@ export default function DailyBriefPage() {
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
         <h1 className="text-3xl font-bold">สรุปปฏิบัติการประจำวัน</h1>
-        <p className="mt-3 text-slate-600">สรุปรายวันอัตโนมัติจาก Audit + Security สำหรับผู้ดูแลระบบ</p>
+        <p className="mt-3 text-slate-600">สรุปรายวันอัตโนมัติจากบันทึกการตรวจสอบและความปลอดภัย สำหรับผู้ดูแลระบบ</p>
         <p className="mt-1 text-xs text-slate-400">{DAILY_BRIEF_UI_VERSION}</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -132,20 +138,20 @@ export default function DailyBriefPage() {
           {!loading && data ? (
             <>
               <div className={`mb-4 rounded-lg border px-3 py-2 text-sm ${riskClass(data.summary.risk_level)}`}>
-                ระดับความเสี่ยง: <span className="font-semibold">{data.summary.risk_level.toUpperCase()}</span>
+                ระดับความเสี่ยง: <span className="font-semibold">{riskLabel(data.summary.risk_level)}</span>
               </div>
 
               <div className="grid gap-3 md:grid-cols-4">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Audit ทั้งหมด (รายวัน)</p>
+                  <p className="text-xs text-slate-500">บันทึกการตรวจสอบทั้งหมด (รายวัน)</p>
                   <p className="text-2xl font-bold text-slate-900">{data.summary.audit_total}</p>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">ผู้ใช้งานที่มี activity</p>
+                  <p className="text-xs text-slate-500">ผู้ใช้งานที่มีกิจกรรม</p>
                   <p className="text-2xl font-bold text-slate-900">{data.summary.audit_unique_users}</p>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Security events (รายวัน)</p>
+                  <p className="text-xs text-slate-500">เหตุการณ์ความปลอดภัย (รายวัน)</p>
                   <p className="text-2xl font-bold text-slate-900">{data.summary.security_total}</p>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -158,7 +164,7 @@ export default function DailyBriefPage() {
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 p-3">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Audit แยกตามโมดูล</p>
+                  <p className="mb-2 text-sm font-semibold text-slate-900">บันทึกการตรวจสอบแยกตามโมดูล</p>
                   <p className="text-sm text-slate-700">
                     money={data.summary.audit_by_module.money ?? 0}, slip={data.summary.audit_by_module.slip ?? 0}, tax=
                     {data.summary.audit_by_module.tax ?? 0}, other={data.summary.audit_by_module.other ?? 0}
@@ -169,7 +175,7 @@ export default function DailyBriefPage() {
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-200 p-3">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Threshold อ้างอิง</p>
+                  <p className="mb-2 text-sm font-semibold text-slate-900">เกณฑ์อ้างอิง</p>
                   <p className="text-sm text-slate-700">
                     วันนี้เตือน {data.thresholds.today_warn}+ / วิกฤต {data.thresholds.today_critical}+
                   </p>
@@ -206,18 +212,18 @@ export default function DailyBriefPage() {
                     return (
                       <div key={d.date} className="rounded-md border border-slate-100 bg-slate-50 p-2">
                         <p className="text-xs text-slate-700">
-                          {d.date} · risk={d.risk_level}
+                          {d.date} · ความเสี่ยง={riskLabel(d.risk_level)}
                         </p>
                         <div className="mt-1 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="w-14 text-[11px] text-slate-600">audit</span>
+                            <span className="w-14 text-[11px] text-slate-600">ตรวจสอบ</span>
                             <div className="h-2 flex-1 rounded bg-slate-200">
                               <div className="h-2 rounded bg-indigo-500" style={{ width: `${auditWidth}%` }} />
                             </div>
                             <span className="w-8 text-right text-[11px] text-slate-700">{d.audit_total}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="w-14 text-[11px] text-slate-600">security</span>
+                            <span className="w-14 text-[11px] text-slate-600">ปลอดภัย</span>
                             <div className="h-2 flex-1 rounded bg-slate-200">
                               <div className="h-2 rounded bg-rose-500" style={{ width: `${secWidth}%` }} />
                             </div>

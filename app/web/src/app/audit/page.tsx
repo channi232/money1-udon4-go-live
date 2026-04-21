@@ -85,6 +85,20 @@ function severityLabel(severity: Severity): string {
   }
 }
 
+function moduleLabel(module: string): string {
+  if (module === "money") return "โมดูลการเงิน";
+  if (module === "slip") return "โมดูลสลิป";
+  if (module === "tax") return "โมดูลภาษี";
+  return module;
+}
+
+function actionLabel(action: string): string {
+  if (action === "export_csv") return "ส่งออก CSV";
+  if (action === "print") return "พิมพ์รายงาน";
+  if (action === "workflow_transition") return "เปลี่ยนสถานะงาน";
+  return action;
+}
+
 function rowSeverity(flags: RowFlag[]): Severity | null {
   if (flags.length === 0) return null;
   if (flags.some((f) => flagSeverity(f) === "high")) return "high";
@@ -623,7 +637,7 @@ export default function AuditPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">มุมมองบันทึก Audit</h1>
+        <h1 className="text-3xl font-bold">มุมมองบันทึกการตรวจสอบ</h1>
         <p className="mt-3 text-slate-600">ดูประวัติการส่งออก/พิมพ์ของผู้ใช้งาน (สิทธิ์ผู้ดูแลระบบเท่านั้น)</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -637,9 +651,9 @@ export default function AuditPage() {
               }}
             >
               <option>ทั้งหมด</option>
-              <option value="money">money</option>
-              <option value="slip">slip</option>
-              <option value="tax">tax</option>
+              <option value="money">โมดูลการเงิน</option>
+              <option value="slip">โมดูลสลิป</option>
+              <option value="tax">โมดูลภาษี</option>
             </select>
             <select
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
@@ -650,9 +664,9 @@ export default function AuditPage() {
               }}
             >
               <option>ทั้งหมด</option>
-              <option value="export_csv">export_csv</option>
-              <option value="print">print</option>
-              <option value="workflow_transition">workflow_transition</option>
+              <option value="export_csv">ส่งออก CSV</option>
+              <option value="print">พิมพ์รายงาน</option>
+              <option value="workflow_transition">เปลี่ยนสถานะงาน</option>
             </select>
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400"
@@ -841,13 +855,15 @@ export default function AuditPage() {
           <div className="mt-4 text-sm text-slate-600">
             พบรายการ: <span className="font-semibold text-slate-900">{visibleRows.length}</span>
             {showOnlyAnomaly ? (
-              <span className="ml-2 text-xs text-amber-700">(กรองเฉพาะแถวที่มี flags)</span>
+              <span className="ml-2 text-xs text-amber-700">(กรองเฉพาะแถวที่มีตัวบ่งชี้ผิดปกติ)</span>
             ) : null}
             {severityFilter !== "ทั้งหมด" ? (
-              <span className="ml-2 text-xs text-slate-500">(severity: {severityFilter.toUpperCase()})</span>
+              <span className="ml-2 text-xs text-slate-500">
+                (ระดับความรุนแรง: {severityFilter === "normal" ? "ปกติ" : severityLabel(severityFilter as Severity)})
+              </span>
             ) : null}
             {reviewFilter !== "ทั้งหมด" ? (
-              <span className="ml-2 text-xs text-slate-500">(review: {reviewFilter})</span>
+              <span className="ml-2 text-xs text-slate-500">(สถานะตรวจทาน: {reviewFilter})</span>
             ) : null}
             {recentHoursFilter > 0 ? (
               <span className="ml-2 text-xs text-slate-500">(ช่วงเวลา: ล่าสุด {recentHoursFilter} ชม.)</span>
@@ -863,10 +879,10 @@ export default function AuditPage() {
               <span className="ml-2 text-xs text-rose-700">ส่งออกสรุปเหตุการณ์ TXT ไม่สำเร็จ</span>
             ) : null}
             {snapshotStatus === "ok" ? (
-              <span className="ml-2 text-xs text-emerald-700">ส่งออกภาพรวม Audit ทั้งชุดแล้ว (TXT + CSV)</span>
+              <span className="ml-2 text-xs text-emerald-700">ส่งออกภาพรวมบันทึกการตรวจสอบทั้งชุดแล้ว (TXT + CSV)</span>
             ) : null}
             {snapshotStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">ส่งออกภาพรวม Audit ทั้งชุดไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">ส่งออกภาพรวมบันทึกการตรวจสอบทั้งชุดไม่สำเร็จ</span>
             ) : null}
             {dailyBriefStatus === "ok_today" ? (
               <span className="ml-2 text-xs text-emerald-700">คัดลอกสรุปรายวัน (วันนี้) แล้ว</span>
@@ -900,7 +916,7 @@ export default function AuditPage() {
                   <th className="py-2">การกระทำ</th>
                   <th className="py-2">จำนวนรายการ</th>
                   <th className="py-2">ระดับความรุนแรง</th>
-                  <th className="py-2">Flags</th>
+                  <th className="py-2">ตัวบ่งชี้ผิดปกติ</th>
                   <th className="py-2">ตรวจทาน</th>
                   <th className="py-2">ข้อเสนอแนะการดำเนินการ</th>
                   <th className="py-2">IP</th>
@@ -912,8 +928,8 @@ export default function AuditPage() {
                   <tr key={`${r.ts}-${idx}`} className="border-b border-slate-100">
                     <td className="py-2">{r.ts}</td>
                     <td className="py-2 font-medium">{r.username}</td>
-                    <td className="py-2">{r.module}</td>
-                    <td className="py-2">{r.action}</td>
+                    <td className="py-2">{moduleLabel(r.module)}</td>
+                    <td className="py-2">{actionLabel(r.action)}</td>
                     <td className="py-2">{r.count}</td>
                     <td className="py-2">
                       {rowSeverity(flags) === null ? (

@@ -114,12 +114,12 @@ export default function SecurityPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Security Monitor</h1>
+        <h1 className="text-3xl font-bold">เฝ้าระวังความปลอดภัย</h1>
         <p className="mt-3 text-slate-600">ติดตามเหตุการณ์ความปลอดภัยจากระบบ Rate Limit (429) เฉพาะ Admin</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงาน Security Monitor</h2>
+            <h2 className="text-xl font-bold">รายงานเฝ้าระวังความปลอดภัย</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
             <p className="text-sm text-slate-700">
               สรุป 429 วันนี้: {summary.today_count} | 7 วัน: {summary.seven_day_count}
@@ -334,14 +334,14 @@ export default function SecurityPage() {
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
               onClick={() => exportSecurityCsv(rows)}
             >
-              Export Security CSV
+              ส่งออกเหตุการณ์ความปลอดภัย CSV
             </button>
             <button
               type="button"
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
               onClick={() => window.print()}
             >
-              พิมพ์รายงาน Security
+              พิมพ์รายงานความปลอดภัย
             </button>
           </div>
 

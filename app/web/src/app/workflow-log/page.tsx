@@ -15,13 +15,13 @@ function statusLabel(status: string): string {
 
 function buildSummaryText(rows: WorkflowTransitionRow[]): string {
   const lines: string[] = [];
-  lines.push("Workflow Transition Brief");
-  lines.push(`Generated: ${new Date().toLocaleString("th-TH")}`);
-  lines.push(`Total rows: ${rows.length}`);
+  lines.push("สรุปการเปลี่ยนสถานะงาน");
+  lines.push(`เวลาสร้างรายงาน: ${new Date().toLocaleString("th-TH")}`);
+  lines.push(`จำนวนทั้งหมด: ${rows.length}`);
   lines.push("");
   rows.slice(0, 20).forEach((r, i) => {
     lines.push(
-      `${i + 1}) ${r.at} | ${r.module} | ${r.key} | ${r.from} -> ${r.to} | by=${r.by} | id=${r.transitionId}${r.reason ? ` | reason=${r.reason}` : ""}`,
+      `${i + 1}) ${r.at} | ${r.module} | ${r.key} | ${r.from} -> ${r.to} | ผู้ดำเนินการ=${r.by} | รหัส=${r.transitionId}${r.reason ? ` | เหตุผล=${r.reason}` : ""}`,
     );
   });
   return lines.join("\n");
@@ -90,7 +90,7 @@ export default function WorkflowLogPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="scheme-light mx-auto min-h-screen w-full max-w-[1400px] px-6 py-10 text-slate-900">
-        <h1 className="text-3xl font-bold">Workflow Transition Log</h1>
+        <h1 className="text-3xl font-bold">บันทึกการเปลี่ยนสถานะงาน</h1>
         <p className="mt-2 text-sm text-slate-600">มุมมองสำหรับตรวจสอบ transition จริงจาก backend (append-only) ใช้สำหรับ UAT และตรวจย้อนหลัง</p>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -110,7 +110,7 @@ export default function WorkflowLogPage() {
               value={fromFilter}
               onChange={(e) => setFromFilter(e.target.value)}
             >
-              <option value="ทั้งหมด">from ทั้งหมด</option>
+              <option value="ทั้งหมด">สถานะเดิมทั้งหมด</option>
               <option value="new">new</option>
               <option value="in_review">in_review</option>
               <option value="approved">approved</option>
@@ -121,7 +121,7 @@ export default function WorkflowLogPage() {
               value={toFilter}
               onChange={(e) => setToFilter(e.target.value)}
             >
-              <option value="ทั้งหมด">to ทั้งหมด</option>
+              <option value="ทั้งหมด">สถานะใหม่ทั้งหมด</option>
               <option value="new">new</option>
               <option value="in_review">in_review</option>
               <option value="approved">approved</option>
@@ -163,7 +163,7 @@ export default function WorkflowLogPage() {
                   .finally(() => window.setTimeout(() => setExportStatus(""), 1800));
               }}
             >
-              Export CSV
+              ส่งออก CSV
             </button>
             <button
               type="button"
@@ -177,7 +177,7 @@ export default function WorkflowLogPage() {
                   .finally(() => window.setTimeout(() => setCopyStatus(""), 1800));
               }}
             >
-              Copy UAT Brief
+              คัดลอกสรุป UAT
             </button>
           </div>
 
@@ -190,8 +190,8 @@ export default function WorkflowLogPage() {
           <p className="mt-2 text-sm text-slate-600">{loading ? "กำลังโหลด..." : message}</p>
           {exportStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">ส่งออก CSV แล้ว</p> : null}
           {exportStatus === "error" ? <p className="mt-1 text-xs text-rose-700">ส่งออก CSV ไม่สำเร็จ</p> : null}
-          {copyStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">คัดลอก UAT Brief แล้ว</p> : null}
-          {copyStatus === "error" ? <p className="mt-1 text-xs text-rose-700">คัดลอก UAT Brief ไม่สำเร็จ</p> : null}
+          {copyStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">คัดลอกสรุป UAT แล้ว</p> : null}
+          {copyStatus === "error" ? <p className="mt-1 text-xs text-rose-700">คัดลอกสรุป UAT ไม่สำเร็จ</p> : null}
         </section>
 
         <section className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -201,10 +201,10 @@ export default function WorkflowLogPage() {
                 <th className="py-2 pr-2">เวลา</th>
                 <th className="py-2 pr-2">โมดูล</th>
                 <th className="py-2 pr-2">Key</th>
-                <th className="py-2 pr-2">Transition</th>
-                <th className="py-2 pr-2">By</th>
-                <th className="py-2 pr-2">Reason</th>
-                <th className="py-2 pr-2">Transition ID</th>
+                <th className="py-2 pr-2">การเปลี่ยนสถานะ</th>
+                <th className="py-2 pr-2">ผู้ดำเนินการ</th>
+                <th className="py-2 pr-2">เหตุผล</th>
+                <th className="py-2 pr-2">รหัสรายการ</th>
               </tr>
             </thead>
             <tbody>

@@ -75,11 +75,11 @@ function flagSeverity(flag: RowFlag): Severity {
 function severityLabel(severity: Severity): string {
   switch (severity) {
     case "high":
-      return "High";
+      return "สูง";
     case "medium":
-      return "Medium";
+      return "กลาง";
     case "low":
-      return "Low";
+      return "ต่ำ";
     default:
       return severity;
   }
@@ -196,8 +196,8 @@ function buildIncidentBriefText(
   rows.slice(0, 5).forEach((item, i) => {
     const sev = rowSeverity(item.flags);
     const sevLabel = sev ? severityLabel(sev) : "Normal";
-    lines.push(
-      `${i + 1}) ${item.row.ts} | ${item.row.module}/${item.row.action} | ${item.row.username} | ${sevLabel} | review=${item.reviewMeta.status}`,
+      lines.push(
+      `${i + 1}) ${item.row.ts} | ${item.row.module}/${item.row.action} | ${item.row.username} | ${sevLabel} | สถานะตรวจทาน=${item.reviewMeta.status}`,
     );
   });
   return lines.join("\n");
@@ -623,7 +623,7 @@ export default function AuditPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Audit Viewer</h1>
+        <h1 className="text-3xl font-bold">มุมมองบันทึก Audit</h1>
         <p className="mt-3 text-slate-600">ดูประวัติการ Export/Print ของผู้ใช้งาน (สิทธิ์ Admin เท่านั้น)</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -671,11 +671,11 @@ export default function AuditPage() {
                 setSeverityFilter(e.target.value as "ทั้งหมด" | "high" | "medium" | "low" | "normal");
               }}
             >
-              <option value="ทั้งหมด">severity: ทั้งหมด</option>
-              <option value="high">severity: High</option>
-              <option value="medium">severity: Medium</option>
-              <option value="low">severity: Low</option>
-              <option value="normal">severity: Normal</option>
+              <option value="ทั้งหมด">ระดับความรุนแรง: ทั้งหมด</option>
+              <option value="high">ระดับความรุนแรง: สูง</option>
+              <option value="medium">ระดับความรุนแรง: กลาง</option>
+              <option value="low">ระดับความรุนแรง: ต่ำ</option>
+              <option value="normal">ระดับความรุนแรง: ปกติ</option>
             </select>
             <select
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
@@ -685,10 +685,10 @@ export default function AuditPage() {
                 setReviewFilter(e.target.value as "ทั้งหมด" | ReviewStatus);
               }}
             >
-              <option value="ทั้งหมด">review: ทั้งหมด</option>
-              <option value="new">review: New</option>
-              <option value="acknowledged">review: Acknowledged</option>
-              <option value="resolved">review: Resolved</option>
+              <option value="ทั้งหมด">สถานะตรวจทาน: ทั้งหมด</option>
+              <option value="new">สถานะตรวจทาน: ใหม่</option>
+              <option value="acknowledged">สถานะตรวจทาน: รับทราบแล้ว</option>
+              <option value="resolved">สถานะตรวจทาน: ปิดแล้ว</option>
             </select>
             <button
               type="button"
@@ -747,14 +747,14 @@ export default function AuditPage() {
                 void copyIncidentBrief();
               }}
             >
-              Copy Incident Brief
+              คัดลอกสรุปเหตุการณ์
             </button>
             <button
               type="button"
               className="rounded-md border border-violet-300 bg-violet-50 px-2 py-1 font-semibold text-violet-800 hover:bg-violet-100"
               onClick={() => exportIncidentBriefText()}
             >
-              Export Incident Brief TXT
+              ส่งออกสรุปเหตุการณ์ TXT
             </button>
             <button
               type="button"
@@ -763,7 +763,7 @@ export default function AuditPage() {
                 void exportFullAuditSnapshot();
               }}
             >
-              Export Full Audit Snapshot
+              ส่งออกภาพรวม Audit ทั้งชุด
             </button>
             <button
               type="button"
@@ -772,7 +772,7 @@ export default function AuditPage() {
                 void copyDailyBrief("today");
               }}
             >
-              Copy Daily Brief (Today)
+              คัดลอกสรุปรายวัน (วันนี้)
             </button>
             <button
               type="button"
@@ -781,21 +781,21 @@ export default function AuditPage() {
                 void copyDailyBrief("24h");
               }}
             >
-              Copy Daily Brief (24h)
+              คัดลอกสรุปรายวัน (24 ชม.)
             </button>
             <button
               type="button"
               className="rounded-md border border-sky-300 bg-sky-50 px-2 py-1 font-semibold text-sky-800 hover:bg-sky-100"
               onClick={() => exportDailyBriefText("today")}
             >
-              Export Daily Brief TXT (Today)
+              ส่งออกสรุปรายวัน TXT (วันนี้)
             </button>
             <button
               type="button"
               className="rounded-md border border-cyan-300 bg-cyan-50 px-2 py-1 font-semibold text-cyan-800 hover:bg-cyan-100"
               onClick={() => exportDailyBriefText("24h")}
             >
-              Export Daily Brief TXT (24h)
+              ส่งออกสรุปรายวัน TXT (24 ชม.)
             </button>
             <button
               type="button"
@@ -815,7 +815,7 @@ export default function AuditPage() {
                 void exportAuditCsv(sortedVisibleRows, showOnlyAnomaly);
               }}
             >
-              Export Audit CSV
+              ส่งออก Audit CSV
             </button>
             <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800">
               แถวผิดปกติ: {totalAnomalyRows}

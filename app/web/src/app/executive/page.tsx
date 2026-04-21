@@ -123,7 +123,7 @@ export default function ExecutivePage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Executive Dashboard</h1>
+        <h1 className="text-3xl font-bold">แดชบอร์ดผู้บริหาร</h1>
         <p className="mt-3 text-slate-600">ภาพรวมผู้บริหาร: การเงิน สลิป ภาษี และความปลอดภัย ในหน้าเดียว</p>
         <p className="mt-1 text-sm text-slate-500">อัปเดตล่าสุด: {updatedAt}</p>
         <div className="no-print mt-3 flex gap-2">
@@ -132,7 +132,7 @@ export default function ExecutivePage() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => exportExecutiveCsv(data, updatedAt)}
           >
-            Export Executive CSV
+            ส่งออก CSV สรุปผู้บริหาร
           </button>
           <button
             type="button"
@@ -143,7 +143,7 @@ export default function ExecutivePage() {
           </button>
         </div>
         <div className="print-only mt-4 rounded-lg border border-slate-300 bg-white p-3">
-          <h2 className="text-xl font-bold">รายงานสรุปผู้บริหาร (Executive Summary)</h2>
+          <h2 className="text-xl font-bold">รายงานสรุปผู้บริหาร</h2>
           <p className="text-sm text-slate-700">วันที่พิมพ์: {updatedAt}</p>
           <p className="text-sm text-slate-700">
             Money {data.moneyCount} รายการ | Slip {data.slipCount} รายการ | Tax {data.taxCount} รายการ
@@ -155,19 +155,19 @@ export default function ExecutivePage() {
 
         <section className="mt-6 grid gap-3 md:grid-cols-3">
           <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm text-slate-500">Money</h2>
+            <h2 className="text-sm text-slate-500">โมดูลการเงิน</h2>
             <p className="mt-1 text-2xl font-bold text-slate-900">{data.moneyCount.toLocaleString()} รายการ</p>
             <p className="text-sm text-slate-600">ยอดรวม {data.moneyTotal.toLocaleString()} บาท</p>
             <p className="mt-1 text-xs text-slate-500">แหล่งข้อมูล: {data.sourceMoney}</p>
           </article>
           <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm text-slate-500">Slip</h2>
+            <h2 className="text-sm text-slate-500">โมดูลสลิป</h2>
             <p className="mt-1 text-2xl font-bold text-slate-900">{data.slipCount.toLocaleString()} รายการ</p>
             <p className="text-sm text-slate-600">ยอดรวมสุทธิ {data.slipTotal.toLocaleString()} บาท</p>
             <p className="mt-1 text-xs text-slate-500">แหล่งข้อมูล: {data.sourceSlip}</p>
           </article>
           <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm text-slate-500">Tax</h2>
+            <h2 className="text-sm text-slate-500">โมดูลภาษี</h2>
             <p className="mt-1 text-2xl font-bold text-slate-900">{data.taxCount.toLocaleString()} รายการ</p>
             <p className="text-sm text-slate-600">เอกสารพร้อมดาวน์โหลด/ติดตาม</p>
             <p className="mt-1 text-xs text-slate-500">แหล่งข้อมูล: {data.sourceTax}</p>
@@ -176,12 +176,12 @@ export default function ExecutivePage() {
 
         <section className="mt-4 grid gap-3 md:grid-cols-2">
           <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm text-slate-500">Audit Activity</h2>
+            <h2 className="text-sm text-slate-500">กิจกรรม Audit</h2>
             <p className="mt-1 text-2xl font-bold text-slate-900">{data.auditCount.toLocaleString()} เหตุการณ์ล่าสุด</p>
             <p className="text-sm text-slate-600">วันนี้เกิด {data.auditToday.toLocaleString()} เหตุการณ์</p>
           </article>
           <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm text-slate-500">Security (Rate Limit)</h2>
+            <h2 className="text-sm text-slate-500">ความปลอดภัย (Rate Limit)</h2>
             <p className="mt-1 text-2xl font-bold text-slate-900">{data.secToday429.toLocaleString()} ครั้งวันนี้</p>
             <p className="text-sm text-slate-600">7 วันล่าสุด {data.sec7d429.toLocaleString()} ครั้ง</p>
           </article>

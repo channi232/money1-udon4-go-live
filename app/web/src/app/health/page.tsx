@@ -98,7 +98,7 @@ export default function HealthPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Health Check</h1>
+        <h1 className="text-3xl font-bold">ตรวจสุขภาพระบบ</h1>
         <p className="mt-3 text-slate-600">ตรวจสุขภาพ API สำคัญแบบรวดเร็ว (HTTP + latency + source)</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -115,7 +115,7 @@ export default function HealthPage() {
                 setTick((v) => v + 1);
               }}
             >
-              รีเฟรช Health
+              รีเฟรชผลตรวจสุขภาพ
             </button>
           </div>
           {loading ? <p className="text-sm text-slate-500">กำลังตรวจสอบ...</p> : null}
@@ -126,7 +126,7 @@ export default function HealthPage() {
                   <th className="py-2">API</th>
                   <th className="py-2">สถานะ</th>
                   <th className="py-2">HTTP</th>
-                  <th className="py-2">Latency</th>
+                  <th className="py-2">เวลาตอบสนอง</th>
                   <th className="py-2">รายละเอียด</th>
                 </tr>
               </thead>

@@ -344,7 +344,7 @@ export default function ReadinessPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Go-Live Readiness</h1>
+        <h1 className="text-3xl font-bold">ความพร้อมก่อนเปิดใช้งานจริง</h1>
         <p className="mt-3 text-slate-600">ตรวจความพร้อมก่อนเปิดใช้งานจริงของระบบรวม</p>
         <div className="no-print mt-3 flex gap-2">
           <button
@@ -352,24 +352,24 @@ export default function ReadinessPage() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => exportReadinessCsv(checks, p0Rows)}
           >
-            Export Readiness CSV
+            ส่งออก CSV ผลตรวจความพร้อม
           </button>
           <button
             type="button"
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => window.print()}
           >
-            พิมพ์รายงาน Readiness
+            พิมพ์รายงานความพร้อม
           </button>
         </div>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงาน Go-Live Readiness</h2>
+            <h2 className="text-xl font-bold">รายงานความพร้อมก่อนเปิดใช้งานจริง</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
             <p className="text-sm text-slate-700">
               สรุปผล: อัตโนมัติ {passed}/{total} รายการ, P0 ติ๊กมือ {p0DoneCount}/{P0_MANUAL_ITEMS.length} (
-              {canGoLive ? "พร้อม Go-Live" : "ยังไม่พร้อม Go-Live"})
+              {canGoLive ? "พร้อมเปิดใช้งานจริง" : "ยังไม่พร้อมเปิดใช้งานจริง"})
             </p>
           </div>
           <div
@@ -378,8 +378,8 @@ export default function ReadinessPage() {
             }`}
           >
             {canGoLive
-              ? "พร้อม Go-Live: ผ่านเช็กอัตโนมัติครบ และติ๊ก P0 ด้วยมือครบ"
-              : "ยังไม่พร้อม Go-Live: ตรวจรายการที่ไม่ผ่านด้านล่าง และติ๊กรายการ P0 ให้ครบ"}
+              ? "พร้อมเปิดใช้งานจริง: ผ่านเช็กอัตโนมัติครบ และติ๊ก P0 ด้วยมือครบ"
+              : "ยังไม่พร้อมเปิดใช้งานจริง: ตรวจรายการที่ไม่ผ่านด้านล่าง และติ๊กรายการ P0 ให้ครบ"}
           </div>
           <p className="mt-2 text-sm text-slate-600">
             เช็กอัตโนมัติ: <span className="font-semibold text-slate-900">{passed}</span> /{" "}
@@ -412,9 +412,9 @@ export default function ReadinessPage() {
           </div>
 
           <div className="mt-8 border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-semibold text-slate-900">P0 ก่อนเปิดใช้งาน (ติ๊กด้วยมือ — เก็บในเบราว์เซอร์นี้)</h2>
+            <h2 className="text-lg font-semibold text-slate-900">P0 ก่อนเปิดใช้งาน (ติ๊กด้วยมือ - เก็บในเบราว์เซอร์นี้)</h2>
             <p className="mt-1 text-sm text-slate-600">
-              รายการนี้ไม่สามารถตรวจอัตโนมัติได้ทั้งหมด แต่จำเป็นต่อการเปิดจริงอย่างปลอดภัย หลังติ๊กครบจะนับร่วมในสถานะ &quot;พร้อม Go-Live&quot; ด้านบน
+              รายการนี้ไม่สามารถตรวจอัตโนมัติได้ทั้งหมด แต่จำเป็นต่อการเปิดจริงอย่างปลอดภัย หลังติ๊กครบจะนับร่วมในสถานะ &quot;พร้อมเปิดใช้งานจริง&quot; ด้านบน
             </p>
             <p className="mt-2 text-sm">
               <a

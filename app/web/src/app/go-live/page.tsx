@@ -96,8 +96,8 @@ export default function GoLivePage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Go-Live Checklist</h1>
-        <p className="mt-3 text-slate-600">เช็กลิสต์ขั้นสุดท้ายก่อนเปิดใช้งานจริง และแผน rollback หากเกิดเหตุฉุกเฉิน</p>
+        <h1 className="text-3xl font-bold">เช็กลิสต์เปิดใช้งานจริง</h1>
+        <p className="mt-3 text-slate-600">เช็กลิสต์ขั้นสุดท้ายก่อนเปิดใช้งานจริง และแผนย้อนกลับระบบหากเกิดเหตุฉุกเฉิน</p>
 
         <div className="no-print mt-3">
           <button
@@ -105,13 +105,13 @@ export default function GoLivePage() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             onClick={() => window.print()}
           >
-            พิมพ์เช็กลิสต์ Go-Live
+            พิมพ์เช็กลิสต์เปิดใช้งานจริง
           </button>
         </div>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">เอกสารตรวจความพร้อมก่อน Go-Live</h2>
+            <h2 className="text-xl font-bold">เอกสารตรวจความพร้อมก่อนเปิดใช้งานจริง</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
           </div>
 
@@ -125,12 +125,12 @@ export default function GoLivePage() {
             ))}
           </ul>
 
-          <h2 className="mt-6 text-lg font-semibold">2) Go-Live Gate (ผ่านก่อนเปิดใช้งาน)</h2>
+          <h2 className="mt-6 text-lg font-semibold">2) จุดผ่านก่อนเปิดใช้งาน (ต้องผ่านทุกข้อ)</h2>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm text-slate-900">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
-                  <th className="py-2">Gate</th>
+                  <th className="py-2">จุดตรวจ</th>
                   <th className="py-2">เกณฑ์ผ่าน</th>
                   <th className="py-2">ผู้รับผิดชอบ</th>
                   <th className="py-2">สถานะ</th>
@@ -149,7 +149,7 @@ export default function GoLivePage() {
             </table>
           </div>
 
-          <h2 className="mt-6 text-lg font-semibold">3) Cutover Timeline (Runbook)</h2>
+          <h2 className="mt-6 text-lg font-semibold">3) ไทม์ไลน์การตัดระบบ (คู่มือปฏิบัติ)</h2>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm text-slate-900">
               <thead>
@@ -173,7 +173,7 @@ export default function GoLivePage() {
             </table>
           </div>
 
-          <h2 className="mt-6 text-lg font-semibold">4) เงื่อนไขตัดสินใจ Rollback</h2>
+          <h2 className="mt-6 text-lg font-semibold">4) เงื่อนไขตัดสินใจย้อนกลับระบบ</h2>
           <ul className="mt-2 space-y-2 text-sm text-slate-800">
             {rollbackTriggers.map((item) => (
               <li key={item} className="flex items-start gap-2">
@@ -183,7 +183,7 @@ export default function GoLivePage() {
             ))}
           </ul>
 
-          <h2 className="mt-6 text-lg font-semibold">5) แผน Rollback ฉุกเฉิน</h2>
+          <h2 className="mt-6 text-lg font-semibold">5) แผนย้อนกลับระบบฉุกเฉิน</h2>
           <ul className="mt-2 space-y-2 text-sm text-slate-800">
             {[...rollbackPlan, ...rollbackSteps].map((item) => (
               <li key={item} className="flex items-start gap-2">
@@ -194,13 +194,13 @@ export default function GoLivePage() {
           </ul>
 
           <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-            Go-Live Decision: อนุมัติเปิดใช้งานจริง ☐ ใช่ / ☐ ไม่ใช่ | ผู้อนุมัติ __________________ | เวลา __________________
+            ผลการพิจารณาเปิดใช้งานจริง: อนุมัติ ☐ ใช่ / ☐ ไม่ใช่ | ผู้อนุมัติ __________________ | เวลา __________________
           </div>
 
           <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             หมายเหตุ: หลังเปิดใช้งานจริง 24 ชั่วโมงแรก ให้ติดตามหน้า Security และ Audit อย่างใกล้ชิด และบันทึกเหตุการณ์ทุกรายการ
           </div>
-          <p className="mt-2 text-sm text-slate-600">แนะนำให้บันทึกเหตุการณ์ระหว่าง Go-Live ที่หน้า Incident Log เพื่อใช้สรุปปิดงานวันแรก</p>
+          <p className="mt-2 text-sm text-slate-600">แนะนำให้บันทึกเหตุการณ์ระหว่างเปิดใช้งานจริงที่หน้าบันทึกเหตุการณ์ เพื่อใช้สรุปปิดงานวันแรก</p>
           <div className="no-print mt-4 flex flex-wrap gap-2">
             <Link
               href="/health"

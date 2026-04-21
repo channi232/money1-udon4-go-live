@@ -73,7 +73,7 @@ export default function DailyBriefPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Daily Ops Brief</h1>
+        <h1 className="text-3xl font-bold">สรุปปฏิบัติการประจำวัน</h1>
         <p className="mt-3 text-slate-600">สรุปรายวันอัตโนมัติจาก Audit + Security สำหรับผู้ดูแลระบบ</p>
         <p className="mt-1 text-xs text-slate-400">{DAILY_BRIEF_UI_VERSION}</p>
 
@@ -116,12 +116,12 @@ export default function DailyBriefPage() {
                 exportDailyBriefCsv(data);
               }}
             >
-              Export CSV
+              ส่งออก CSV
             </button>
           </div>
 
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงาน Daily Ops Brief</h2>
+            <h2 className="text-xl font-bold">รายงานสรุปปฏิบัติการประจำวัน</h2>
             <p className="text-sm text-slate-700">วันที่สรุป: {data?.date || "-"}</p>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
           </div>
@@ -158,7 +158,7 @@ export default function DailyBriefPage() {
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 p-3">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Audit by Module</p>
+                  <p className="mb-2 text-sm font-semibold text-slate-900">Audit แยกตามโมดูล</p>
                   <p className="text-sm text-slate-700">
                     money={data.summary.audit_by_module.money ?? 0}, slip={data.summary.audit_by_module.slip ?? 0}, tax=
                     {data.summary.audit_by_module.tax ?? 0}, other={data.summary.audit_by_module.other ?? 0}
@@ -181,13 +181,13 @@ export default function DailyBriefPage() {
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 p-3">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Top Buckets</p>
+                  <p className="mb-2 text-sm font-semibold text-slate-900">ประเภทเหตุการณ์สูงสุด</p>
                   <p className="text-sm text-slate-700">
                     {data.top_buckets.length === 0 ? "-" : data.top_buckets.map((x) => `${x.bucket} (${x.count})`).join(", ")}
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-200 p-3">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Top IPs</p>
+                  <p className="mb-2 text-sm font-semibold text-slate-900">IP ที่พบสูงสุด</p>
                   <p className="text-sm text-slate-700">
                     {data.top_ips.length === 0 ? "-" : data.top_ips.map((x) => `${x.ip} (${x.count})`).join(", ")}
                   </p>

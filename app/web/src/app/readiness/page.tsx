@@ -35,6 +35,25 @@ const P0_MANUAL_ITEMS: Array<{ id: string; label: string }> = [
   },
 ];
 
+const CORE_7DAY_TARGETS: Array<{ title: string; dependsOn: string[] }> = [
+  {
+    title: "สิทธิ์ผู้ใช้จริงพร้อมใช้งาน",
+    dependsOn: ["Authentication"],
+  },
+  {
+    title: "3 โมดูลใช้ข้อมูลจริง (ไม่ fallback)",
+    dependsOn: ["Money Data Source", "Slip Data Source", "Tax Data Source"],
+  },
+  {
+    title: "ระบบบันทึกตรวจสอบและความปลอดภัยพร้อม",
+    dependsOn: ["Audit Logging", "Security Monitoring", "Workflow State API"],
+  },
+  {
+    title: "ความพร้อมสำรองและผู้รับผิดชอบหลังเปิดใช้งาน",
+    dependsOn: ["backup", "incident"],
+  },
+];
+
 type CheckItem = {
   title: string;
   ok: boolean;
@@ -335,6 +354,26 @@ export default function ReadinessPage() {
   const passed = useMemo(() => checks.filter((c) => c.ok).length, [checks]);
   const total = checks.length;
   const p0AllTicked = P0_MANUAL_ITEMS.length > 0 && p0DoneCount === P0_MANUAL_ITEMS.length;
+  const checkMap = useMemo(() => {
+    const m: Record<string, boolean> = {};
+    for (const c of checks) m[c.title] = c.ok;
+    return m;
+  }, [checks]);
+  const p0Map = useMemo(() => {
+    const m: Record<string, boolean> = {};
+    for (const r of p0Rows) m[r.id] = r.done;
+    return m;
+  }, [p0Rows]);
+  const core7Rows = useMemo(
+    () =>
+      CORE_7DAY_TARGETS.map((row) => {
+        const ok = row.dependsOn.every((dep) => (dep in checkMap ? Boolean(checkMap[dep]) : Boolean(p0Map[dep])));
+        return { ...row, ok };
+      }),
+    [checkMap, p0Map],
+  );
+  const core7Passed = useMemo(() => core7Rows.filter((r) => r.ok).length, [core7Rows]);
+  const core7AllPassed = core7Rows.length > 0 && core7Passed === core7Rows.length;
   const canGoLive = total > 0 && passed === total && p0AllTicked;
   const printedAt = useMemo(
     () => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
@@ -386,6 +425,14 @@ export default function ReadinessPage() {
             <span className="font-semibold text-slate-900">{total}</span> รายการ · P0 ติ๊กมือ:{" "}
             <span className="font-semibold text-slate-900">{p0DoneCount}</span> / {P0_MANUAL_ITEMS.length}
           </p>
+          <div
+            className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+              core7AllPassed ? "border-indigo-300 bg-indigo-50 text-indigo-900" : "border-slate-300 bg-slate-50 text-slate-700"
+            }`}
+          >
+            ชุดเร่งด่วน 7 วัน: ผ่าน <span className="font-semibold">{core7Passed}</span> / {core7Rows.length} เป้าหมาย
+            {core7AllPassed ? " (ผ่านครบ)" : " (ยังไม่ครบ)"}
+          </div>
 
           {loading ? <p className="mt-3 text-sm text-slate-500">กำลังตรวจสอบ...</p> : null}
           {error ? <p className="mt-3 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p> : null}
@@ -409,6 +456,30 @@ export default function ReadinessPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold text-slate-900">สถานะชุดเร่งด่วน 7 วัน</h2>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[760px] text-sm text-slate-900">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-slate-600">
+                    <th className="py-2">เป้าหมาย</th>
+                    <th className="py-2">สถานะ</th>
+                    <th className="py-2">เงื่อนไขอ้างอิง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {core7Rows.map((row) => (
+                    <tr key={row.title} className="border-b border-slate-100">
+                      <td className="py-2 font-medium">{row.title}</td>
+                      <td className={`py-2 font-semibold ${row.ok ? "text-emerald-700" : "text-rose-700"}`}>{row.ok ? "ผ่าน" : "ไม่ผ่าน"}</td>
+                      <td className="py-2">{row.dependsOn.join(", ")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="mt-8 border-t border-slate-200 pt-6">

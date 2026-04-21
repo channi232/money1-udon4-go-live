@@ -6,10 +6,10 @@ import { fetchWorkflowTransitions, type WorkflowTransitionRow } from "@/lib/work
 import { useEffect, useMemo, useState } from "react";
 
 function statusLabel(status: string): string {
-  if (status === "new") return "new";
-  if (status === "in_review") return "in_review";
-  if (status === "approved") return "approved";
-  if (status === "rejected") return "rejected";
+  if (status === "new") return "ใหม่";
+  if (status === "in_review") return "กำลังตรวจสอบ";
+  if (status === "approved") return "อนุมัติแล้ว";
+  if (status === "rejected") return "ตีกลับ";
   return status;
 }
 
@@ -21,10 +21,17 @@ function buildSummaryText(rows: WorkflowTransitionRow[]): string {
   lines.push("");
   rows.slice(0, 20).forEach((r, i) => {
     lines.push(
-      `${i + 1}) ${r.at} | ${r.module} | ${r.key} | ${r.from} -> ${r.to} | ผู้ดำเนินการ=${r.by} | รหัส=${r.transitionId}${r.reason ? ` | เหตุผล=${r.reason}` : ""}`,
+      `${i + 1}) ${r.at} | ${moduleLabel(r.module)} | ${r.key} | ${statusLabel(r.from)} -> ${statusLabel(r.to)} | ผู้ดำเนินการ=${r.by} | รหัส=${r.transitionId}${r.reason ? ` | เหตุผล=${r.reason}` : ""}`,
     );
   });
   return lines.join("\n");
+}
+
+function moduleLabel(module: string): string {
+  if (module === "money") return "โมดูลการเงิน";
+  if (module === "slip") return "โมดูลสลิป";
+  if (module === "tax") return "โมดูลภาษี";
+  return module;
 }
 
 async function exportWorkflowTransitionCsv(rows: WorkflowTransitionRow[]): Promise<void> {
@@ -182,9 +189,9 @@ export default function WorkflowLogPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-slate-100 px-3 py-1">money: {moduleStats.money}</span>
-            <span className="rounded-full bg-slate-100 px-3 py-1">slip: {moduleStats.slip}</span>
-            <span className="rounded-full bg-slate-100 px-3 py-1">tax: {moduleStats.tax}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1">โมดูลการเงิน: {moduleStats.money}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1">โมดูลสลิป: {moduleStats.slip}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1">โมดูลภาษี: {moduleStats.tax}</span>
           </div>
 
           <p className="mt-2 text-sm text-slate-600">{loading ? "กำลังโหลด..." : message}</p>
@@ -211,7 +218,7 @@ export default function WorkflowLogPage() {
               {rows.map((r) => (
                 <tr key={r.transitionId} className="border-b border-slate-100 align-top">
                   <td className="py-2 pr-2 whitespace-nowrap">{r.at || "-"}</td>
-                  <td className="py-2 pr-2">{r.module}</td>
+                  <td className="py-2 pr-2">{moduleLabel(r.module)}</td>
                   <td className="py-2 pr-2 font-mono text-xs">{r.key}</td>
                   <td className="py-2 pr-2">
                     {statusLabel(r.from)} {"->"} {statusLabel(r.to)}

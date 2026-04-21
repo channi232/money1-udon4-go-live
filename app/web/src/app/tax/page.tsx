@@ -1,6 +1,7 @@
 "use client";
 
 import AuthGuard from "@/components/auth-guard";
+import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { fetchTaxRows, type TaxApiResponse, type TaxRow } from "@/lib/tax-api";
 import { trackAudit } from "@/lib/audit-api";
@@ -357,6 +358,14 @@ export default function TaxPage() {
     <AuthGuard allowedRoles={["personnel", "admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12">
         <h1 className="text-3xl font-bold">โมดูลภาษี</h1>
+        <div className="no-print mt-2">
+          <Link
+            href="/"
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            กลับหน้าหลัก
+          </Link>
+        </div>
         <p className="mt-3 text-slate-600">ค้นหารายการหนังสือรับรองภาษีแบบอ่านอย่างเดียว</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}

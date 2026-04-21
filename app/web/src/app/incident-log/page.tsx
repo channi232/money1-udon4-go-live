@@ -86,6 +86,9 @@ export default function IncidentLogPage() {
   const [traceInput, setTraceInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [severityFilter, setSeverityFilter] = useState<"all" | IncidentRow["severity"]>("all");
+  const [moduleFilter, setModuleFilter] = useState<"all" | IncidentRow["module"]>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | IncidentRow["status"]>("all");
   const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
 
   useEffect(() => {
@@ -114,9 +117,17 @@ export default function IncidentLogPage() {
     const stage = text.match(/stage=([^|]+)/i)?.[1]?.trim() || "";
     return { req, code, stage };
   }, [traceInput]);
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const bySeverity = severityFilter === "all" || row.severity === severityFilter;
+      const byModule = moduleFilter === "all" || row.module === moduleFilter;
+      const byStatus = statusFilter === "all" || row.status === statusFilter;
+      return bySeverity && byModule && byStatus;
+    });
+  }, [rows, severityFilter, moduleFilter, statusFilter]);
   const summary = useMemo(() => {
     const stat = {
-      total: rows.length,
+      total: filteredRows.length,
       open: 0,
       monitoring: 0,
       resolved: 0,
@@ -127,7 +138,7 @@ export default function IncidentLogPage() {
       tax: 0,
       slip: 0,
     };
-    for (const row of rows) {
+    for (const row of filteredRows) {
       stat[row.status] += 1;
       moduleCounts[row.module] += 1;
     }
@@ -137,7 +148,7 @@ export default function IncidentLogPage() {
       ...stat,
       topModule: topModuleEntry && topModuleEntry[1] > 0 ? `${topModuleEntry[0]} (${topModuleEntry[1]})` : "-",
     };
-  }, [rows]);
+  }, [filteredRows]);
   const copyIncidentLine = async () => {
     const line = `Trace: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
     try {
@@ -187,9 +198,9 @@ export default function IncidentLogPage() {
           <button
             type="button"
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
-            onClick={() => exportIncidentCsv(rows)}
+            onClick={() => exportIncidentCsv(filteredRows)}
           >
-            Export Incident CSV
+            Export Incident CSV (ตามตัวกรอง)
           </button>
           <button
             type="button"
@@ -215,6 +226,50 @@ export default function IncidentLogPage() {
 
           <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900">
             ใช้หน้านี้บันทึกเหตุการณ์จริงระหว่าง Go-Live และแนบเป็นหลักฐานปิดงานวันแรก
+          </div>
+          <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-4">
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value as "all" | IncidentRow["severity"])}
+            >
+              <option value="all">severity: ทั้งหมด</option>
+              <option value="P1">severity: P1</option>
+              <option value="P2">severity: P2</option>
+              <option value="P3">severity: P3</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              value={moduleFilter}
+              onChange={(e) => setModuleFilter(e.target.value as "all" | IncidentRow["module"])}
+            >
+              <option value="all">module: ทั้งหมด</option>
+              <option value="platform">module: platform</option>
+              <option value="money">module: money</option>
+              <option value="tax">module: tax</option>
+              <option value="slip">module: slip</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "all" | IncidentRow["status"])}
+            >
+              <option value="all">status: ทั้งหมด</option>
+              <option value="open">status: open</option>
+              <option value="monitoring">status: monitoring</option>
+              <option value="resolved">status: resolved</option>
+            </select>
+            <button
+              type="button"
+              className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-800 hover:bg-slate-100"
+              onClick={() => {
+                setSeverityFilter("all");
+                setModuleFilter("all");
+                setStatusFilter("all");
+              }}
+            >
+              ล้างตัวกรอง
+            </button>
           </div>
           <div className="mt-3 grid gap-2 text-xs md:grid-cols-5">
             <div className="rounded border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700">
@@ -345,7 +400,7 @@ export default function IncidentLogPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {filteredRows.map((row) => (
                   <tr key={row.id} className="border-b border-slate-100">
                     <td className="py-2 font-medium">{row.time}</td>
                     <td className="py-2">{row.severity}</td>

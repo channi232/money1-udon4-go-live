@@ -263,6 +263,15 @@ export default function SlipPage() {
       return resolveSlipPriority(r, workflow) === "สูง";
     });
   }, [sortedFiltered, workflowState]);
+  const slipStats = useMemo(() => {
+    const totalNet = sortedFiltered.reduce((acc, r) => acc + r.net, 0);
+    const avgNet = sortedFiltered.length > 0 ? totalNet / sortedFiltered.length : 0;
+    return {
+      totalNet,
+      avgNet,
+      highPriorityCount: highPriorityRows.length,
+    };
+  }, [sortedFiltered, highPriorityRows.length]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
       setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
@@ -498,6 +507,22 @@ export default function SlipPage() {
             </button>
             <button
               type="button"
+              className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
+              onClick={() =>
+                printSlipReport(highPriorityRows.length, () => {
+                  setQ("");
+                  setMonth("ทั้งหมด");
+                  setWorkflowFilter("all");
+                  setPriorityFilter("สูง");
+                  setSortBy("net_desc");
+                  setVisibleCount(highPriorityRows.length);
+                })
+              }
+            >
+              พิมพ์คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() =>
                 printSlipReport(sortedFiltered.length, () => {
@@ -567,6 +592,17 @@ export default function SlipPage() {
             >
               คิวปกติ: {prioritySummary["ปกติ"]}
             </button>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-3">
+            <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
+              ยอดสุทธิรวมตามมุมมอง: <span className="font-semibold text-indigo-900">{slipStats.totalNet.toLocaleString("th-TH")} บาท</span>
+            </div>
+            <div className="rounded border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700">
+              ยอดสุทธิเฉลี่ย: <span className="font-semibold text-slate-900">{Math.round(slipStats.avgNet).toLocaleString("th-TH")} บาท</span>
+            </div>
+            <div className="rounded border border-rose-300 bg-rose-50 px-3 py-2 text-rose-800">
+              รายการคิวสูง: <span className="font-semibold text-rose-900">{slipStats.highPriorityCount.toLocaleString("th-TH")}</span>
+            </div>
           </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>

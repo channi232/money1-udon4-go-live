@@ -239,6 +239,25 @@ export default function TaxPage() {
       return resolveTaxPriority(r, workflow) === "สูง";
     });
   }, [sortedFiltered, workflowState]);
+  const taxStats = useMemo(() => {
+    const totalItems = sortedFiltered.length;
+    const readyCount = sortedFiltered.reduce((acc, r) => {
+      const key = `tax:${r.citizenIdMasked}:${r.year}`;
+      const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+      return acc + (workflow === "approved" ? 1 : 0);
+    }, 0);
+    const inReviewCount = sortedFiltered.reduce((acc, r) => {
+      const key = `tax:${r.citizenIdMasked}:${r.year}`;
+      const workflow = workflowState[key]?.status ?? toTaxWorkflowStatus(r.status);
+      return acc + (workflow === "in_review" ? 1 : 0);
+    }, 0);
+    return {
+      totalItems,
+      readyCount,
+      inReviewCount,
+      highPriorityCount: highPriorityRows.length,
+    };
+  }, [sortedFiltered, workflowState, highPriorityRows.length]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
       setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
@@ -485,6 +504,22 @@ export default function TaxPage() {
             </button>
             <button
               type="button"
+              className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
+              onClick={() =>
+                printTaxReport(highPriorityRows.length, () => {
+                  setQ("");
+                  setYear("ทั้งหมด");
+                  setWorkflowFilter("all");
+                  setPriorityFilter("สูง");
+                  setSortBy("year_desc");
+                  setVisibleCount(highPriorityRows.length);
+                })
+              }
+            >
+              พิมพ์คิวสูง ({highPriorityRows.length})
+            </button>
+            <button
+              type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
               onClick={() =>
                 printTaxReport(sortedFiltered.length, () => {
@@ -554,6 +589,20 @@ export default function TaxPage() {
             >
               คิวปกติ: {prioritySummary["ปกติ"]}
             </button>
+          </div>
+          <div className="no-print mt-2 grid gap-2 text-xs md:grid-cols-4">
+            <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
+              รายการตามมุมมอง: <span className="font-semibold text-indigo-900">{taxStats.totalItems.toLocaleString("th-TH")}</span>
+            </div>
+            <div className="rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-800">
+              พร้อมดาวน์โหลด: <span className="font-semibold text-emerald-900">{taxStats.readyCount.toLocaleString("th-TH")}</span>
+            </div>
+            <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
+              กำลังตรวจสอบ: <span className="font-semibold text-amber-900">{taxStats.inReviewCount.toLocaleString("th-TH")}</span>
+            </div>
+            <div className="rounded border border-rose-300 bg-rose-50 px-3 py-2 text-rose-800">
+              รายการคิวสูง: <span className="font-semibold text-rose-900">{taxStats.highPriorityCount.toLocaleString("th-TH")}</span>
+            </div>
           </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>

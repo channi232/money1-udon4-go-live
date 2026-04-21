@@ -32,3 +32,4 @@ New isolated project workspace for the unified finance platform.
 - `docs/PRE_MODULE_KICKOFF_CHECKLIST_TH.md` - เช็กลิสต์ปิดงานก่อนเริ่มพัฒนาเชิงลึก 3 โมดูล
 - `docs/PRIORITY_POLICY_TH.md` - เกณฑ์ Priority กลางสำหรับ money/tax/slip
 - `docs/SPRINT1_REGRESSION_CHECKLIST_TH.md` - เช็กลิสต์ regression ก่อนปล่อยงานรอบย่อย
+- `docs/SPRINT2_EXECUTION_PLAN_TH.md` - แผนเริ่ม Sprint-2 แบบลงมือทำได้ทันที

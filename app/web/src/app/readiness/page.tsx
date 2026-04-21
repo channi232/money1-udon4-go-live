@@ -128,9 +128,49 @@ export default function ReadinessPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [p0Manual, setP0Manual] = useState<Record<string, boolean>>({});
+  const [workflowProbe, setWorkflowProbe] = useState<{
+    loading: boolean;
+    ok: boolean;
+    persistence: "database" | "file" | "unknown";
+    detail: string;
+    checkedAt: string;
+  }>({
+    loading: false,
+    ok: false,
+    persistence: "unknown",
+    detail: "ยังไม่ตรวจ",
+    checkedAt: "-",
+  });
+
+  const runWorkflowProbe = async () => {
+    setWorkflowProbe((prev) => ({ ...prev, loading: true }));
+    try {
+      const wf = await fetchWorkflowMap();
+      const persistence = wf.persistence || "unknown";
+      const ok = wf.ok && persistence === "database";
+      setWorkflowProbe({
+        loading: false,
+        ok,
+        persistence,
+        detail: wf.ok
+          ? `workflow keys=${wf.count}, persistence=${persistence}`
+          : `ตรวจไม่ผ่าน: ${wf.message || "workflow API error"}`,
+        checkedAt: new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
+      });
+    } catch {
+      setWorkflowProbe({
+        loading: false,
+        ok: false,
+        persistence: "unknown",
+        detail: "ตรวจไม่ผ่าน: network_error",
+        checkedAt: new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
+      });
+    }
+  };
 
   useEffect(() => {
     setP0Manual(loadP0ManualState());
+    void runWorkflowProbe();
   }, []);
 
   const setP0Checked = (id: string, done: boolean) => {
@@ -452,6 +492,29 @@ export default function ReadinessPage() {
           >
             Blockers ก่อนเปิดจริง: <span className="font-semibold">{blockers.length}</span>{" "}
             {blockers.length === 0 ? "รายการ (พร้อมเปิดใช้งานจริง)" : "รายการ (ต้องปิดให้ครบก่อนเปิดจริง)"}
+          </div>
+
+          <div
+            className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+              workflowProbe.ok ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-amber-300 bg-amber-50 text-amber-800"
+            }`}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span>
+                ตัวตรวจด่วน Workflow Database:{" "}
+                <span className="font-semibold">{workflowProbe.ok ? "พร้อมใช้งาน (database)" : "ยังไม่พร้อม"}</span>
+              </span>
+              <button
+                type="button"
+                className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-50"
+                onClick={() => void runWorkflowProbe()}
+                disabled={workflowProbe.loading}
+              >
+                {workflowProbe.loading ? "กำลังตรวจ..." : "ตรวจอีกครั้ง"}
+              </button>
+              <span className="text-xs">ตรวจล่าสุด: {workflowProbe.checkedAt}</span>
+            </div>
+            <p className="mt-1 text-xs">{workflowProbe.detail}</p>
           </div>
 
           {loading ? <p className="mt-3 text-sm text-slate-500">กำลังตรวจสอบ...</p> : null}

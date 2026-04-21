@@ -31,7 +31,7 @@ async function exportWorkflowTransitionCsv(rows: WorkflowTransitionRow[]): Promi
   const stamp = new Date().toISOString().slice(0, 10);
   await exportCsvChunked({
     filename: `workflow-transition-log-${stamp}.csv`,
-    header: ["At", "Module", "Key", "From", "To", "By", "Reason", "TransitionId"],
+    header: ["เวลา", "โมดูล", "รหัสรายการ", "สถานะเดิม", "สถานะใหม่", "ผู้ดำเนินการ", "เหตุผล", "รหัสการเปลี่ยนสถานะ"],
     rows: rows.map((r) => [r.at, r.module, r.key, r.from, r.to, r.by, r.reason || "", r.transitionId]),
   });
 }
@@ -200,7 +200,7 @@ export default function WorkflowLogPage() {
               <tr className="border-b border-slate-200 text-left text-slate-600">
                 <th className="py-2 pr-2">เวลา</th>
                 <th className="py-2 pr-2">โมดูล</th>
-                <th className="py-2 pr-2">Key</th>
+                <th className="py-2 pr-2">รหัสรายการ</th>
                 <th className="py-2 pr-2">การเปลี่ยนสถานะ</th>
                 <th className="py-2 pr-2">ผู้ดำเนินการ</th>
                 <th className="py-2 pr-2">เหตุผล</th>

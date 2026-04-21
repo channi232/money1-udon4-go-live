@@ -113,7 +113,7 @@ function suggestedActions(flags: RowFlag[]): string[] {
     actions.push("ทวนความจำเป็นของ export ขนาดใหญ่และจำกัดช่วงข้อมูล");
   }
   if (actions.length === 0) {
-    actions.push("ไม่ต้องดำเนินการ (Normal)");
+    actions.push("ไม่ต้องดำเนินการ (ปกติ)");
   }
   return actions;
 }
@@ -132,7 +132,7 @@ function formatHistoryEntry(h: ReviewHistoryEntry): string {
 
 function buildTimelineSummaryText(key: string, rows: ReviewHistoryEntry[]): string {
   const lines: string[] = [];
-  lines.push(`Timeline Key: ${key}`);
+  lines.push(`รหัสไทม์ไลน์: ${key}`);
   lines.push(`Total events: ${rows.length}`);
   lines.push("");
   rows.forEach((h, idx) => {
@@ -178,24 +178,24 @@ function buildIncidentBriefText(
     .join(", ");
 
   const lines: string[] = [];
-  lines.push("Incident Brief (Audit)");
-  lines.push(`Generated: ${now}`);
+  lines.push("สรุปเหตุการณ์ (Audit)");
+  lines.push(`เวลาสร้าง: ${now}`);
   lines.push(
     `Filter: module=${context.moduleFilter}, action=${context.actionFilter}, severity=${context.severityFilter}, review=${context.reviewFilter}, hours=${context.recentHoursFilter || "all"}`,
   );
-  lines.push(`Total rows: ${total}`);
+  lines.push(`จำนวนทั้งหมด: ${total}`);
   lines.push(
-    `Severity: High=${severity.high}, Medium=${severity.medium}, Low=${severity.low}, Normal=${severity.normal}`,
+    `ระดับความรุนแรง: สูง=${severity.high}, กลาง=${severity.medium}, ต่ำ=${severity.low}, ปกติ=${severity.normal}`,
   );
   lines.push(
-    `Review: New=${review.new}, Acknowledged=${review.acknowledged}, Resolved=${review.resolved}`,
+    `สถานะตรวจทาน: ใหม่=${review.new}, รับทราบแล้ว=${review.acknowledged}, ปิดแล้ว=${review.resolved}`,
   );
   lines.push(`Top flags: ${topFlagList || "-"}`);
   lines.push("");
-  lines.push("Latest highlights:");
+  lines.push("รายการสำคัญล่าสุด:");
   rows.slice(0, 5).forEach((item, i) => {
     const sev = rowSeverity(item.flags);
-    const sevLabel = sev ? severityLabel(sev) : "Normal";
+    const sevLabel = sev ? severityLabel(sev) : "ปกติ";
       lines.push(
       `${i + 1}) ${item.row.ts} | ${item.row.module}/${item.row.action} | ${item.row.username} | ${sevLabel} | สถานะตรวจทาน=${item.reviewMeta.status}`,
     );
@@ -239,7 +239,7 @@ function buildDailyBriefText(
     severityFilter: "all",
     reviewFilter: "all",
     recentHoursFilter: 0,
-  }).replace("Incident Brief (Audit)", `Daily Brief (${label})`);
+  }).replace("สรุปเหตุการณ์ (Audit)", `สรุปรายวัน (${label})`);
 }
 
 function downloadTextFile(filename: string, text: string) {
@@ -255,7 +255,7 @@ function downloadTextFile(filename: string, text: string) {
 async function exportTimelineCsv(key: string, rows: ReviewHistoryEntry[]): Promise<void> {
   const stamp = new Date().toISOString().slice(0, 10);
   const cleanKey = key.replaceAll("|", "_").slice(0, 50);
-  const header = ["Key", "From", "To", "By", "At", "Summary"];
+  const header = ["รหัส", "สถานะเดิม", "สถานะใหม่", "ผู้ดำเนินการ", "เวลา", "สรุป"];
   const csvRows = rows.map((h) => [
     key,
     h.from || "",
@@ -282,15 +282,15 @@ async function exportAuditCsv(
     "โมดูล",
     "การกระทำ",
     "จำนวนรายการ",
-    "Severity",
+    "ระดับความรุนแรง",
     "Flags",
-    "Review Status",
-    "Review Updated By",
-    "Review Updated At",
-    "Review Timeline",
-    "Suggested Action",
+    "สถานะตรวจทาน",
+    "ผู้ปรับสถานะตรวจทาน",
+    "เวลาปรับสถานะตรวจทาน",
+    "ลำดับเหตุการณ์ตรวจทาน",
+    "ข้อเสนอแนะการดำเนินการ",
     "IP",
-    "User Agent",
+    "ตัวแทนผู้ใช้งาน (User Agent)",
   ];
   const csvRows = rows.map(({ row, flags, reviewMeta }) => [
     row.ts,
@@ -298,7 +298,7 @@ async function exportAuditCsv(
     row.module,
     row.action,
     String(row.count),
-    rowSeverity(flags) ? severityLabel(rowSeverity(flags) as Severity) : "Normal",
+    rowSeverity(flags) ? severityLabel(rowSeverity(flags) as Severity) : "ปกติ",
     flags.length > 0 ? flags.map(flagLabel).join(" | ") : "ปกติ",
     reviewMeta.status,
     reviewMeta.updatedBy || "",
@@ -480,7 +480,7 @@ export default function AuditPage() {
         row.module,
         row.action,
         String(row.count),
-        rowSeverity(flags) ? severityLabel(rowSeverity(flags) as Severity) : "Normal",
+        rowSeverity(flags) ? severityLabel(rowSeverity(flags) as Severity) : "ปกติ",
         flags.length > 0 ? flags.map(flagLabel).join(" | ") : "ปกติ",
         reviewMeta.status,
         reviewMeta.updatedBy || "",
@@ -498,15 +498,15 @@ export default function AuditPage() {
           "โมดูล",
           "การกระทำ",
           "จำนวนรายการ",
-          "Severity",
+          "ระดับความรุนแรง",
           "Flags",
-          "Review Status",
-          "Review Updated By",
-          "Review Updated At",
-          "Review Timeline",
-          "Suggested Action",
+          "สถานะตรวจทาน",
+          "ผู้ปรับสถานะตรวจทาน",
+          "เวลาปรับสถานะตรวจทาน",
+          "ลำดับเหตุการณ์ตรวจทาน",
+          "ข้อเสนอแนะการดำเนินการ",
           "IP",
-          "User Agent",
+          "ตัวแทนผู้ใช้งาน (User Agent)",
         ],
         rows: csvRows,
       });
@@ -624,7 +624,7 @@ export default function AuditPage() {
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
         <h1 className="text-3xl font-bold">มุมมองบันทึก Audit</h1>
-        <p className="mt-3 text-slate-600">ดูประวัติการ Export/Print ของผู้ใช้งาน (สิทธิ์ Admin เท่านั้น)</p>
+        <p className="mt-3 text-slate-600">ดูประวัติการส่งออก/พิมพ์ของผู้ใช้งาน (สิทธิ์ผู้ดูแลระบบเท่านั้น)</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid gap-3 md:grid-cols-6">
@@ -712,7 +712,7 @@ export default function AuditPage() {
                 setRecentHoursFilter(24);
               }}
             >
-              High ล่าสุด 24 ชม.
+              ระดับสูง ล่าสุด 24 ชม.
             </button>
             <button
               type="button"
@@ -723,7 +723,7 @@ export default function AuditPage() {
                 setRecentHoursFilter(168);
               }}
             >
-              High ล่าสุด 7 วัน
+              ระดับสูง ล่าสุด 7 วัน
             </button>
             <button
               type="button"
@@ -821,13 +821,13 @@ export default function AuditPage() {
               แถวผิดปกติ: {totalAnomalyRows}
             </span>
             <span className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800">
-              High: {severitySummary.high}
+              สูง: {severitySummary.high}
             </span>
             <span className="rounded-md border border-orange-300 bg-orange-50 px-2 py-1 text-orange-800">
-              Medium: {severitySummary.medium}
+              กลาง: {severitySummary.medium}
             </span>
             <span className="rounded-md border border-cyan-300 bg-cyan-50 px-2 py-1 text-cyan-800">
-              Low: {severitySummary.low}
+              ต่ำ: {severitySummary.low}
             </span>
             {(Object.keys(anomalySummary) as RowFlag[]).map((k) =>
               anomalySummary[k] > 0 ? (
@@ -852,15 +852,15 @@ export default function AuditPage() {
             {recentHoursFilter > 0 ? (
               <span className="ml-2 text-xs text-slate-500">(ช่วงเวลา: ล่าสุด {recentHoursFilter} ชม.)</span>
             ) : null}
-            {briefCopyStatus === "ok" ? <span className="ml-2 text-xs text-emerald-700">คัดลอก Incident Brief แล้ว</span> : null}
+            {briefCopyStatus === "ok" ? <span className="ml-2 text-xs text-emerald-700">คัดลอกสรุปเหตุการณ์แล้ว</span> : null}
             {briefCopyStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">คัดลอก Incident Brief ไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">คัดลอกสรุปเหตุการณ์ไม่สำเร็จ</span>
             ) : null}
             {briefExportStatus === "ok" ? (
-              <span className="ml-2 text-xs text-emerald-700">ส่งออก Incident Brief TXT แล้ว</span>
+              <span className="ml-2 text-xs text-emerald-700">ส่งออกสรุปเหตุการณ์ TXT แล้ว</span>
             ) : null}
             {briefExportStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">ส่งออก Incident Brief TXT ไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">ส่งออกสรุปเหตุการณ์ TXT ไม่สำเร็จ</span>
             ) : null}
             {snapshotStatus === "ok" ? (
               <span className="ml-2 text-xs text-emerald-700">ส่งออก Full Audit Snapshot แล้ว (TXT + CSV)</span>
@@ -869,22 +869,22 @@ export default function AuditPage() {
               <span className="ml-2 text-xs text-rose-700">ส่งออก Full Audit Snapshot ไม่สำเร็จ</span>
             ) : null}
             {dailyBriefStatus === "ok_today" ? (
-              <span className="ml-2 text-xs text-emerald-700">คัดลอก Daily Brief (Today) แล้ว</span>
+              <span className="ml-2 text-xs text-emerald-700">คัดลอกสรุปรายวัน (วันนี้) แล้ว</span>
             ) : null}
             {dailyBriefStatus === "ok_24h" ? (
-              <span className="ml-2 text-xs text-emerald-700">คัดลอก Daily Brief (24h) แล้ว</span>
+              <span className="ml-2 text-xs text-emerald-700">คัดลอกสรุปรายวัน (24 ชม.) แล้ว</span>
             ) : null}
             {dailyBriefStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">คัดลอก Daily Brief ไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">คัดลอกสรุปรายวันไม่สำเร็จ</span>
             ) : null}
             {dailyExportStatus === "ok_today" ? (
-              <span className="ml-2 text-xs text-emerald-700">ส่งออก Daily Brief TXT (Today) แล้ว</span>
+              <span className="ml-2 text-xs text-emerald-700">ส่งออกสรุปรายวัน TXT (วันนี้) แล้ว</span>
             ) : null}
             {dailyExportStatus === "ok_24h" ? (
-              <span className="ml-2 text-xs text-emerald-700">ส่งออก Daily Brief TXT (24h) แล้ว</span>
+              <span className="ml-2 text-xs text-emerald-700">ส่งออกสรุปรายวัน TXT (24 ชม.) แล้ว</span>
             ) : null}
             {dailyExportStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">ส่งออก Daily Brief TXT ไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">ส่งออกสรุปรายวัน TXT ไม่สำเร็จ</span>
             ) : null}
             {message ? <span className="ml-3 text-red-600">{message}</span> : null}
           </div>
@@ -901,10 +901,10 @@ export default function AuditPage() {
                   <th className="py-2">จำนวนรายการ</th>
                   <th className="py-2">Severity</th>
                   <th className="py-2">Flags</th>
-                  <th className="py-2">Review</th>
-                  <th className="py-2">Suggested Action</th>
+                  <th className="py-2">ตรวจทาน</th>
+                  <th className="py-2">ข้อเสนอแนะการดำเนินการ</th>
                   <th className="py-2">IP</th>
-                  <th className="py-2">User Agent</th>
+                  <th className="py-2">ตัวแทนผู้ใช้งาน (User Agent)</th>
                 </tr>
               </thead>
               <tbody>
@@ -918,19 +918,19 @@ export default function AuditPage() {
                     <td className="py-2">
                       {rowSeverity(flags) === null ? (
                         <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-                          Normal
+                          ปกติ
                         </span>
                       ) : rowSeverity(flags) === "high" ? (
                         <span className="rounded-md border border-rose-300 bg-rose-50 px-2 py-0.5 text-xs text-rose-800">
-                          High
+                          สูง
                         </span>
                       ) : rowSeverity(flags) === "medium" ? (
                         <span className="rounded-md border border-orange-300 bg-orange-50 px-2 py-0.5 text-xs text-orange-800">
-                          Medium
+                          กลาง
                         </span>
                       ) : (
                         <span className="rounded-md border border-cyan-300 bg-cyan-50 px-2 py-0.5 text-xs text-cyan-800">
-                          Low
+                          ต่ำ
                         </span>
                       )}
                     </td>
@@ -992,7 +992,7 @@ export default function AuditPage() {
                           className="rounded-md border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-xs text-indigo-800 hover:bg-indigo-100"
                           onClick={() => openTimeline(r, reviewMeta)}
                         >
-                          ดู Timeline เต็ม
+                          ดูไทม์ไลน์เต็ม
                         </button>
                       </div>
                       <div className="mt-1 text-[11px] text-slate-500">
@@ -1036,8 +1036,8 @@ export default function AuditPage() {
             <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">Timeline การเปลี่ยนสถานะ Review</h3>
-                  <p className="text-xs text-slate-500">Key: {timelineTarget.key}</p>
+                  <h3 className="text-base font-semibold text-slate-900">ไทม์ไลน์การเปลี่ยนสถานะตรวจทาน</h3>
+                  <p className="text-xs text-slate-500">รหัส: {timelineTarget.key}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -1047,7 +1047,7 @@ export default function AuditPage() {
                       void exportTimelineCsv(timelineTarget.key, timelineVisible);
                     }}
                   >
-                    Export Timeline CSV
+                    ส่งออกไทม์ไลน์ CSV
                   </button>
                   <button
                     type="button"
@@ -1056,7 +1056,7 @@ export default function AuditPage() {
                       void copyTimelineSummary(timelineTarget.key, timelineVisible);
                     }}
                   >
-                    Copy Timeline Summary
+                    คัดลอกสรุปไทม์ไลน์
                   </button>
                   <button
                     type="button"
@@ -1081,13 +1081,13 @@ export default function AuditPage() {
                     onChange={(e) => setTimelineStatusFilter(e.target.value as "ทั้งหมด" | ReviewStatus)}
                   >
                     <option value="ทั้งหมด">สถานะทั้งหมด</option>
-                    <option value="new">to: new</option>
-                    <option value="acknowledged">to: acknowledged</option>
-                    <option value="resolved">to: resolved</option>
+                    <option value="new">ไปสถานะ: ใหม่</option>
+                    <option value="acknowledged">ไปสถานะ: รับทราบแล้ว</option>
+                    <option value="resolved">ไปสถานะ: ปิดแล้ว</option>
                   </select>
                 </div>
                 {copyStatus === "ok" ? (
-                  <p className="mb-2 text-xs text-emerald-700">คัดลอก Timeline Summary แล้ว</p>
+                  <p className="mb-2 text-xs text-emerald-700">คัดลอกสรุปไทม์ไลน์แล้ว</p>
                 ) : null}
                 {copyStatus === "error" ? (
                   <p className="mb-2 text-xs text-rose-700">คัดลอกไม่สำเร็จ (clipboard ไม่พร้อมใช้งาน)</p>

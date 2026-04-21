@@ -90,6 +90,7 @@ export default function MoneyPage() {
   const [apiDiag, setApiDiag] = useState<{ requestId?: string; errorCode?: string; stage?: string }>({});
   const [copiedTrace, setCopiedTrace] = useState(false);
   const [usingSavedView, setUsingSavedView] = useState(false);
+  const [reloading, setReloading] = useState(false);
 
   useEffect(() => {
     try {
@@ -130,6 +131,21 @@ export default function MoneyPage() {
     }
   }, [q, status, workflowFilter, priorityFilter, sortBy]);
 
+  const loadMoneyRows = async () => {
+    const data = await fetchMoneyRows();
+    setRows(data.rows);
+    setSource(data.source);
+    setApiMessage(data.message || "");
+    setMoneyMeta(data.meta);
+    setApiDiag({
+      requestId: data.request_id,
+      errorCode: data.error_code,
+      stage: data.debug?.trace?.stage,
+    });
+    setLoading(false);
+    setReloading(false);
+  };
+
   useEffect(() => {
     let active = true;
     fetchSession().then((s) => {
@@ -138,19 +154,7 @@ export default function MoneyPage() {
     fetchWorkflowMap().then((w) => {
       if (active && w.ok) setWorkflowState(w.map || {});
     });
-    fetchMoneyRows().then((data) => {
-      if (!active) return;
-      setRows(data.rows);
-      setSource(data.source);
-      setApiMessage(data.message || "");
-      setMoneyMeta(data.meta);
-      setApiDiag({
-        requestId: data.request_id,
-        errorCode: data.error_code,
-        stage: data.debug?.trace?.stage,
-      });
-      setLoading(false);
-    });
+    void loadMoneyRows();
     return () => {
       active = false;
     };
@@ -179,6 +183,10 @@ export default function MoneyPage() {
   };
 
   const updateWorkflow = (key: string, to: WorkflowStatus, fallback: WorkflowStatus) => {
+    if (source !== "database") {
+      setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้เปลี่ยนสถานะงาน");
+      return;
+    }
     const reason = to === "rejected" ? window.prompt("ระบุเหตุผลการตีกลับ", "") || "" : "";
     if (to === "rejected" && reason.trim() === "") return;
     void saveWorkflowForKey(key, to, fallback, reason).then((ok) => {
@@ -195,6 +203,10 @@ export default function MoneyPage() {
   };
 
   const bulkApply = async (to: WorkflowStatus) => {
+    if (source !== "database") {
+      setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้ดำเนินการแบบกลุ่ม");
+      return;
+    }
     if (selectedCount <= 0) {
       setBulkMessage("ยังไม่ได้เลือกรายการสำหรับการดำเนินการแบบกลุ่ม");
       return;
@@ -239,6 +251,10 @@ export default function MoneyPage() {
   };
 
   const undoLastBulk = async () => {
+    if (source !== "database") {
+      setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้ย้อนกลับการปรับกลุ่ม");
+      return;
+    }
     if (lastBulkChanges.length === 0) {
       setBulkMessage("ไม่มีรายการ bulk ล่าสุดให้ย้อนกลับ");
       return;
@@ -366,6 +382,10 @@ export default function MoneyPage() {
       // ignore storage errors
     }
   };
+  const refreshMoneyData = () => {
+    setReloading(true);
+    void loadMoneyRows();
+  };
 
   return (
     <AuthGuard allowedRoles={["finance", "admin"]}>
@@ -385,6 +405,21 @@ export default function MoneyPage() {
           <span className="font-semibold">{source === "database" ? "ฐานข้อมูลจริง" : "ข้อมูลสำรอง"}</span>
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
+        <div className="no-print mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+            onClick={refreshMoneyData}
+            disabled={reloading}
+          >
+            {reloading ? "กำลังรีเฟรชข้อมูล..." : "รีเฟรชข้อมูลล่าสุด"}
+          </button>
+          {source !== "database" ? (
+            <span className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-800">
+              โหมดข้อมูลสำรอง: อ่านอย่างเดียวชั่วคราว
+            </span>
+          ) : null}
+        </div>
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
             <p>
@@ -672,15 +707,16 @@ export default function MoneyPage() {
           </div>
           <div className="no-print mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700">เลือกแล้ว: {selectedCount}</span>
-            <button type="button" className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800" onClick={() => void bulkApply("in_review")}>รับเรื่องที่เลือก</button>
-            <button type="button" className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800" onClick={() => void bulkApply("approved")}>อนุมัติที่เลือก</button>
-            <button type="button" className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800" onClick={() => void bulkApply("rejected")}>ตีกลับที่เลือก</button>
+            <button type="button" className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void bulkApply("in_review")} disabled={source !== "database"}>รับเรื่องที่เลือก</button>
+            <button type="button" className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void bulkApply("approved")} disabled={source !== "database"}>อนุมัติที่เลือก</button>
+            <button type="button" className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void bulkApply("rejected")} disabled={source !== "database"}>ตีกลับที่เลือก</button>
             <button
               type="button"
               className="rounded-md border border-indigo-300 bg-indigo-50 px-2 py-1 text-indigo-800"
               onClick={() => {
                 void undoLastBulk();
               }}
+              disabled={source !== "database"}
             >
               ย้อนกลับการปรับกลุ่มล่าสุด ({lastBulkChanges.length})
             </button>
@@ -779,6 +815,7 @@ export default function MoneyPage() {
                         const key = `money:${r.id}`;
                         const current = workflowState[key]?.status ?? toMoneyWorkflowStatus(r.status);
                         const actions = availableWorkflowActions("money", session?.role ?? "guest", current);
+                        if (source !== "database") return <span className="text-xs text-rose-600">ข้อมูลสำรอง (อ่านอย่างเดียว)</span>;
                         if (actions.length === 0) return <span className="text-xs text-slate-400">ไม่มีสิทธิ์</span>;
                         return (
                           <div className="flex flex-wrap gap-1">

@@ -374,6 +374,18 @@ export default function ReadinessPage() {
   );
   const core7Passed = useMemo(() => core7Rows.filter((r) => r.ok).length, [core7Rows]);
   const core7AllPassed = core7Rows.length > 0 && core7Passed === core7Rows.length;
+  const blockers = useMemo(() => {
+    const autoFailed = checks
+      .filter((c) => !c.ok)
+      .map((c) => ({ type: "เช็กอัตโนมัติ", title: c.title, detail: c.detail }));
+    const p0Pending = p0Rows
+      .filter((r) => !r.done)
+      .map((r) => ({ type: "P0 ติ๊กมือ", title: r.label, detail: "ยังไม่ติ๊กยืนยัน" }));
+    const corePending = core7Rows
+      .filter((r) => !r.ok)
+      .map((r) => ({ type: "เป้าหมาย 7 วัน", title: r.title, detail: `ต้องผ่าน: ${r.dependsOn.join(", ")}` }));
+    return [...corePending, ...autoFailed, ...p0Pending];
+  }, [checks, p0Rows, core7Rows]);
   const canGoLive = total > 0 && passed === total && p0AllTicked;
   const printedAt = useMemo(
     () => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
@@ -433,6 +445,14 @@ export default function ReadinessPage() {
             ชุดเร่งด่วน 7 วัน: ผ่าน <span className="font-semibold">{core7Passed}</span> / {core7Rows.length} เป้าหมาย
             {core7AllPassed ? " (ผ่านครบ)" : " (ยังไม่ครบ)"}
           </div>
+          <div
+            className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+              blockers.length === 0 ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-rose-300 bg-rose-50 text-rose-800"
+            }`}
+          >
+            Blockers ก่อนเปิดจริง: <span className="font-semibold">{blockers.length}</span>{" "}
+            {blockers.length === 0 ? "รายการ (พร้อมเปิดใช้งานจริง)" : "รายการ (ต้องปิดให้ครบก่อนเปิดจริง)"}
+          </div>
 
           {loading ? <p className="mt-3 text-sm text-slate-500">กำลังตรวจสอบ...</p> : null}
           {error ? <p className="mt-3 rounded border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p> : null}
@@ -480,6 +500,36 @@ export default function ReadinessPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold text-slate-900">รายการงานค้างก่อนเปิดใช้งานจริง (Blockers)</h2>
+            {blockers.length === 0 ? (
+              <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                ไม่พบงานค้างระดับบล็อก พร้อมเข้าสู่ขั้นตอนเปิดใช้งานจริง
+              </p>
+            ) : (
+              <div className="mt-2 overflow-x-auto">
+                <table className="w-full min-w-[760px] text-sm text-slate-900">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-slate-600">
+                      <th className="py-2">ประเภท</th>
+                      <th className="py-2">รายการ</th>
+                      <th className="py-2">รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blockers.map((row) => (
+                      <tr key={`${row.type}-${row.title}`} className="border-b border-slate-100">
+                        <td className="py-2">{row.type}</td>
+                        <td className="py-2 font-medium">{row.title}</td>
+                        <td className="py-2">{row.detail}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 border-t border-slate-200 pt-6">

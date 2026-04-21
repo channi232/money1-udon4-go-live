@@ -59,7 +59,7 @@ function toThaiMonthLabel(value: string): string {
 
 async function exportSlipCsv(rows: SlipRow[], getPriority: (row: SlipRow) => SlipPriority) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["งวดเดือน", "เลขบุคลากร", "ชื่อ-นามสกุล", "ยอดสุทธิ", "Priority"];
+  const header = ["งวดเดือน", "เลขบุคลากร", "ชื่อ-นามสกุล", "ยอดสุทธิ", "ระดับความสำคัญ"];
   const dataRows = rows.map((r) => [
     toThaiMonthLabel(r.month),
     r.employeeId,
@@ -274,7 +274,7 @@ export default function SlipPage() {
   }, [sortedFiltered, highPriorityRows.length]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
-      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
+      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับการดำเนินการแบบกลุ่ม");
       return;
     }
     const actionLabel = to === "in_review" ? "รับเรื่อง" : to === "approved" ? "อนุมัติ" : "ตีกลับ";
@@ -311,7 +311,7 @@ export default function SlipPage() {
     if (success > 0) void trackAudit("slip", "workflow_transition", success);
     setLastBulkChanges(applied);
     setBulkMessage(
-      `Bulk result: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
+      `ผลการดำเนินการแบบกลุ่ม: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
     );
     setSelectedKeys({});
   };
@@ -331,7 +331,7 @@ export default function SlipPage() {
       else failed += 1;
     }
     if (success > 0) void trackAudit("slip", "workflow_transition", success);
-    setBulkMessage(`Undo result: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
+    setBulkMessage(`ผลการย้อนกลับแบบกลุ่ม: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
     if (failed === 0) setLastBulkChanges([]);
   };
 
@@ -370,7 +370,7 @@ export default function SlipPage() {
   return (
     <AuthGuard allowedRoles={["finance", "personnel", "admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Slip Module</h1>
+        <h1 className="text-3xl font-bold">โมดูลสลิป</h1>
         <p className="mt-3 text-slate-600">ค้นหาและดูรายการสลิปเงินเดือนแบบอ่านอย่างเดียว</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}
@@ -378,7 +378,7 @@ export default function SlipPage() {
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          เกณฑ์ Priority: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
+          เกณฑ์ระดับความสำคัญ: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
         </p>
         {usingSavedView ? (
           <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
@@ -386,7 +386,7 @@ export default function SlipPage() {
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
             <p>
-              support trace: req={apiDiag.requestId || "-"}
+              รหัสติดตามสนับสนุน: req={apiDiag.requestId || "-"}
               {apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}
               {apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}
             </p>
@@ -395,14 +395,14 @@ export default function SlipPage() {
               className="rounded border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-800 hover:bg-indigo-100"
               onClick={() => void copySupportTrace()}
             >
-              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอก trace"}
+              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอกรหัสติดตาม"}
             </button>
           </div>
         ) : null}
 
         <section className="scheme-light mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงานโมดูลสลิปเงินเดือน (Slip)</h2>
+            <h2 className="text-xl font-bold">รายงานโมดูลสลิปเงินเดือน</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
             <p className="text-sm text-slate-700">จำนวนรายการ: {sortedFiltered.length}</p>
           </div>
@@ -460,7 +460,7 @@ export default function SlipPage() {
                   setSortBy("month_desc");
                 }}
               >
-                preset: รอตรวจสอบ
+                มุมมองด่วน: รอตรวจสอบ
               </button>
               <button
                 type="button"
@@ -473,7 +473,7 @@ export default function SlipPage() {
                   setSortBy("month_desc");
                 }}
               >
-                preset: ตีกลับ
+                มุมมองด่วน: ตีกลับ
               </button>
               <button
                 type="button"
@@ -486,7 +486,7 @@ export default function SlipPage() {
                   setSortBy("net_desc");
                 }}
               >
-                preset: ยอดสุทธิสูงสุด
+                มุมมองด่วน: ยอดสุทธิสูงสุด
               </button>
               <button
                 type="button"
@@ -498,7 +498,7 @@ export default function SlipPage() {
                   setSortBy("net_desc");
                 }}
               >
-                preset: คิวเร่งด่วน
+                มุมมองด่วน: คิวเร่งด่วน
               </button>
               <button
                 type="button"
@@ -506,7 +506,7 @@ export default function SlipPage() {
                 title="ล้างตัวกรองทั้งหมดและลบมุมมองที่บันทึกไว้"
                 onClick={resetSavedView}
               >
-                preset: เคลียร์ทั้งหมด
+                มุมมองด่วน: เคลียร์ทั้งหมด
               </button>
               <button
                 type="button"
@@ -532,7 +532,7 @@ export default function SlipPage() {
                 });
               }}
             >
-              Export CSV
+              ส่งออก CSV
             </button>
             <button
               type="button"
@@ -662,7 +662,7 @@ export default function SlipPage() {
                 void undoLastBulk();
               }}
             >
-              Undo bulk ล่าสุด ({lastBulkChanges.length})
+              ย้อนกลับการปรับกลุ่มล่าสุด ({lastBulkChanges.length})
             </button>
             <button
               type="button"
@@ -702,7 +702,7 @@ export default function SlipPage() {
                   <th className="py-2">เลขบุคลากร</th>
                   <th className="py-2">ชื่อ-นามสกุล</th>
                   <th className="py-2">ยอดสุทธิ</th>
-                  <th className="py-2 no-print">Priority</th>
+                  <th className="py-2 no-print">ระดับความสำคัญ</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>

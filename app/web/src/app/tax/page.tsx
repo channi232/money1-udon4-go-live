@@ -34,7 +34,7 @@ const TAX_VIEW_STORAGE_KEY = "tax-module-view-v1";
 
 async function exportTaxCsv(rows: TaxRow[], getPriority: (row: TaxRow) => TaxPriority) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เลขบัตรประชาชน (Masked)", "ชื่อ-นามสกุล", "ปีภาษี", "สถานะเอกสาร", "Priority"];
+  const header = ["เลขบัตรประชาชน (ปกปิดบางส่วน)", "ชื่อ-นามสกุล", "ปีภาษี", "สถานะเอกสาร", "ระดับความสำคัญ"];
   const dataRows = rows.map((r) => [r.citizenIdMasked, r.fullName, r.year, r.status, getPriority(r)]);
   await exportCsvChunked({
     filename: `tax-report-${stamp}.csv`,
@@ -260,7 +260,7 @@ export default function TaxPage() {
   }, [sortedFiltered, workflowState, highPriorityRows.length]);
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
-      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
+      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับการดำเนินการแบบกลุ่ม");
       return;
     }
     const actionLabel = to === "in_review" ? "รับเรื่อง" : to === "approved" ? "อนุมัติ" : "ตีกลับ";
@@ -297,7 +297,7 @@ export default function TaxPage() {
     if (success > 0) void trackAudit("tax", "workflow_transition", success);
     setLastBulkChanges(applied);
     setBulkMessage(
-      `Bulk result: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
+      `ผลการดำเนินการแบบกลุ่ม: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
     );
     setSelectedKeys({});
   };
@@ -317,7 +317,7 @@ export default function TaxPage() {
       else failed += 1;
     }
     if (success > 0) void trackAudit("tax", "workflow_transition", success);
-    setBulkMessage(`Undo result: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
+    setBulkMessage(`ผลการย้อนกลับแบบกลุ่ม: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
     if (failed === 0) setLastBulkChanges([]);
   };
 
@@ -356,7 +356,7 @@ export default function TaxPage() {
   return (
     <AuthGuard allowedRoles={["personnel", "admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Tax Module</h1>
+        <h1 className="text-3xl font-bold">โมดูลภาษี</h1>
         <p className="mt-3 text-slate-600">ค้นหารายการหนังสือรับรองภาษีแบบอ่านอย่างเดียว</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}
@@ -366,7 +366,7 @@ export default function TaxPage() {
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
             <p>
-              support trace: req={apiDiag.requestId || "-"}
+              รหัสติดตามสนับสนุน: req={apiDiag.requestId || "-"}
               {apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}
               {apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}
             </p>
@@ -375,7 +375,7 @@ export default function TaxPage() {
               className="rounded border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-800 hover:bg-indigo-100"
               onClick={() => void copySupportTrace()}
             >
-              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอก trace"}
+              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอกรหัสติดตาม"}
             </button>
           </div>
         ) : null}
@@ -390,7 +390,7 @@ export default function TaxPage() {
           </p>
         ) : null}
         <p className="mt-1 text-xs text-slate-500">
-          เกณฑ์ Priority: สูง=งานอยู่ในคิวตรวจสอบ/ตีกลับ, กลาง=กำลังจัดทำ, ปกติ=พร้อมดาวน์โหลด
+          เกณฑ์ระดับความสำคัญ: สูง=งานอยู่ในคิวตรวจสอบ/ตีกลับ, กลาง=กำลังจัดทำ, ปกติ=พร้อมดาวน์โหลด
         </p>
         {usingSavedView ? (
           <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
@@ -398,7 +398,7 @@ export default function TaxPage() {
 
         <section className="scheme-light mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงานโมดูลภาษี (Tax)</h2>
+            <h2 className="text-xl font-bold">รายงานโมดูลภาษี</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
             <p className="text-sm text-slate-700">จำนวนรายการ: {sortedFiltered.length}</p>
           </div>
@@ -455,7 +455,7 @@ export default function TaxPage() {
                   setSortBy("year_desc");
                 }}
               >
-                preset: รอตรวจสอบ
+                มุมมองด่วน: รอตรวจสอบ
               </button>
               <button
                 type="button"
@@ -468,7 +468,7 @@ export default function TaxPage() {
                   setSortBy("year_desc");
                 }}
               >
-                preset: ตีกลับ
+                มุมมองด่วน: ตีกลับ
               </button>
               <button
                 type="button"
@@ -481,7 +481,7 @@ export default function TaxPage() {
                   setSortBy("year_desc");
                 }}
               >
-                preset: พร้อมดาวน์โหลด
+                มุมมองด่วน: พร้อมดาวน์โหลด
               </button>
               <button
                 type="button"
@@ -493,7 +493,7 @@ export default function TaxPage() {
                   setSortBy("year_desc");
                 }}
               >
-                preset: คิวเร่งด่วน
+                มุมมองด่วน: คิวเร่งด่วน
               </button>
               <button
                 type="button"
@@ -503,7 +503,7 @@ export default function TaxPage() {
                   resetSavedView();
                 }}
               >
-                preset: เคลียร์ทั้งหมด
+                มุมมองด่วน: เคลียร์ทั้งหมด
               </button>
               <button
                 type="button"
@@ -529,7 +529,7 @@ export default function TaxPage() {
                 });
               }}
             >
-              Export CSV
+              ส่งออก CSV
             </button>
             <button
               type="button"
@@ -662,7 +662,7 @@ export default function TaxPage() {
                 void undoLastBulk();
               }}
             >
-              Undo bulk ล่าสุด ({lastBulkChanges.length})
+              ย้อนกลับการปรับกลุ่มล่าสุด ({lastBulkChanges.length})
             </button>
             <button
               type="button"
@@ -698,11 +698,11 @@ export default function TaxPage() {
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="py-2 no-print">เลือก</th>
-                  <th className="py-2">เลขบัตรประชาชน (Masked)</th>
+                  <th className="py-2">เลขบัตรประชาชน (ปกปิดบางส่วน)</th>
                   <th className="py-2">ชื่อ-นามสกุล</th>
                   <th className="py-2">ปีภาษี</th>
                   <th className="py-2">สถานะเอกสาร</th>
-                  <th className="py-2 no-print">Priority</th>
+                  <th className="py-2 no-print">ระดับความสำคัญ</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>

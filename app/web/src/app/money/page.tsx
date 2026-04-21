@@ -28,7 +28,7 @@ async function exportMoneyCsv(
   getPriority: (row: MoneyRow) => MoneyPriority,
 ) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เลขที่รายการ", "ชื่อบุคลากร", "งวดข้อมูล", "จำนวนเงิน", "สถานะ", "Priority"];
+  const header = ["เลขที่รายการ", "ชื่อบุคลากร", "งวดข้อมูล", "จำนวนเงิน", "สถานะ", "ระดับความสำคัญ"];
   const dataRows = rows.map((r) => [r.id, r.school, formatMoneyDate(r.date), String(r.amount), r.status, getPriority(r)]);
   await exportCsvChunked({
     filename: `money-report-${stamp}.csv`,
@@ -195,7 +195,7 @@ export default function MoneyPage() {
 
   const bulkApply = async (to: WorkflowStatus) => {
     if (selectedCount <= 0) {
-      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับ Bulk action");
+      setBulkMessage("ยังไม่ได้เลือกรายการสำหรับการดำเนินการแบบกลุ่ม");
       return;
     }
     const actionLabel = to === "in_review" ? "รับเรื่อง" : to === "approved" ? "อนุมัติ" : "ตีกลับ";
@@ -232,7 +232,7 @@ export default function MoneyPage() {
     if (success > 0) void trackAudit("money", "workflow_transition", success);
     setLastBulkChanges(applied);
     setBulkMessage(
-      `Bulk result: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
+      `ผลการดำเนินการแบบกลุ่ม: สำเร็จ ${success}, ข้าม(สิทธิ์/transition) ${skippedInvalidTransition}, ข้าม(ไม่พบแถว) ${skippedNoRow}, บันทึกไม่สำเร็จ ${failedSave}`,
     );
     setSelectedKeys({});
   };
@@ -252,7 +252,7 @@ export default function MoneyPage() {
       else failed += 1;
     }
     if (success > 0) void trackAudit("money", "workflow_transition", success);
-    setBulkMessage(`Undo result: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
+    setBulkMessage(`ผลการย้อนกลับแบบกลุ่ม: สำเร็จ ${success}, บันทึกไม่สำเร็จ ${failed}`);
     if (failed === 0) setLastBulkChanges([]);
   };
 
@@ -369,7 +369,7 @@ export default function MoneyPage() {
   return (
     <AuthGuard allowedRoles={["finance", "admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12">
-        <h1 className="text-3xl font-bold">Money Module</h1>
+        <h1 className="text-3xl font-bold">โมดูลการเงิน</h1>
         <p className="mt-3 text-slate-600">ตารางรายการการเงินแบบอ่านอย่างเดียว (Read-only)</p>
         <p className="mt-2 text-sm text-slate-500">
           แหล่งข้อมูลปัจจุบัน:{" "}
@@ -379,7 +379,7 @@ export default function MoneyPage() {
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
             <p>
-              support trace: req={apiDiag.requestId || "-"}
+              รหัสติดตามสนับสนุน: req={apiDiag.requestId || "-"}
               {apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}
               {apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}
             </p>
@@ -388,7 +388,7 @@ export default function MoneyPage() {
               className="rounded border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-800 hover:bg-indigo-100"
               onClick={() => void copySupportTrace()}
             >
-              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอก trace"}
+              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอกรหัสติดตาม"}
             </button>
           </div>
         ) : null}
@@ -404,7 +404,7 @@ export default function MoneyPage() {
           </p>
         ) : null}
         <p className="mt-1 text-xs text-slate-500">
-          เกณฑ์ Priority: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
+          เกณฑ์ระดับความสำคัญ: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป
         </p>
         {usingSavedView ? (
           <p className="mt-1 text-xs text-emerald-700">กำลังใช้มุมมองที่บันทึกไว้ล่าสุด</p>
@@ -412,7 +412,7 @@ export default function MoneyPage() {
 
         <section className="scheme-light mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">รายงานโมดูลการเงิน (Money)</h2>
+            <h2 className="text-xl font-bold">รายงานโมดูลการเงิน</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
             <p className="text-sm text-slate-700">จำนวนรายการ: {sortedFiltered.length}</p>
           </div>
@@ -470,7 +470,7 @@ export default function MoneyPage() {
                   setSortBy("date_desc");
                 }}
               >
-                preset: รอตรวจสอบ
+                มุมมองด่วน: รอตรวจสอบ
               </button>
               <button
                 type="button"
@@ -482,7 +482,7 @@ export default function MoneyPage() {
                   setSortBy("date_desc");
                 }}
               >
-                preset: ตีกลับ
+                มุมมองด่วน: ตีกลับ
               </button>
               <button
                 type="button"
@@ -495,7 +495,7 @@ export default function MoneyPage() {
                   setPriorityFilter("all");
                 }}
               >
-                preset: ยอดเงินสูงสุด
+                มุมมองด่วน: ยอดเงินสูงสุด
               </button>
               <button
                 type="button"
@@ -505,7 +505,7 @@ export default function MoneyPage() {
                   resetSavedView();
                 }}
               >
-                preset: เคลียร์ทั้งหมด
+                มุมมองด่วน: เคลียร์ทั้งหมด
               </button>
               <button
                 type="button"
@@ -525,7 +525,7 @@ export default function MoneyPage() {
                   setSortBy("amount_desc");
                 }}
               >
-                preset: คิวเร่งด่วน
+                มุมมองด่วน: คิวเร่งด่วน
               </button>
             </div>
           </div>
@@ -543,7 +543,7 @@ export default function MoneyPage() {
                 });
               }}
             >
-              Export CSV
+              ส่งออก CSV
             </button>
             <button
               type="button"
@@ -673,7 +673,7 @@ export default function MoneyPage() {
                 void undoLastBulk();
               }}
             >
-              Undo bulk ล่าสุด ({lastBulkChanges.length})
+              ย้อนกลับการปรับกลุ่มล่าสุด ({lastBulkChanges.length})
             </button>
             <button
               type="button"
@@ -714,7 +714,7 @@ export default function MoneyPage() {
                   <th className="py-2">งวดข้อมูล</th>
                   <th className="py-2">จำนวนเงิน</th>
                   <th className="py-2">สถานะ</th>
-                  <th className="py-2 no-print">Priority</th>
+                  <th className="py-2 no-print">ระดับความสำคัญ</th>
                   <th className="py-2 no-print">สถานะงาน</th>
                   <th className="py-2 no-print">ประวัติล่าสุด</th>
                   <th className="py-2 no-print">ดำเนินการ</th>

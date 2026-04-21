@@ -86,6 +86,7 @@ export default function IncidentLogPage() {
   const [traceInput, setTraceInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState<"all" | IncidentRow["severity"]>("all");
   const [moduleFilter, setModuleFilter] = useState<"all" | IncidentRow["module"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | IncidentRow["status"]>("all");
@@ -118,13 +119,16 @@ export default function IncidentLogPage() {
     return { req, code, stage };
   }, [traceInput]);
   const filteredRows = useMemo(() => {
+    const needle = search.trim().toLowerCase();
     return rows.filter((row) => {
       const bySeverity = severityFilter === "all" || row.severity === severityFilter;
       const byModule = moduleFilter === "all" || row.module === moduleFilter;
       const byStatus = statusFilter === "all" || row.status === statusFilter;
-      return bySeverity && byModule && byStatus;
+      const haystack = `${row.time} ${row.module} ${row.impact} ${row.action} ${row.owner} ${row.trace}`.toLowerCase();
+      const byText = needle === "" || haystack.includes(needle);
+      return bySeverity && byModule && byStatus && byText;
     });
-  }, [rows, severityFilter, moduleFilter, statusFilter]);
+  }, [rows, severityFilter, moduleFilter, statusFilter, search]);
   const summary = useMemo(() => {
     const stat = {
       total: filteredRows.length,
@@ -227,7 +231,13 @@ export default function IncidentLogPage() {
           <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900">
             ใช้หน้านี้บันทึกเหตุการณ์จริงระหว่าง Go-Live และแนบเป็นหลักฐานปิดงานวันแรก
           </div>
-          <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-4">
+          <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-5">
+            <input
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              placeholder="ค้นหา impact/action/owner/trace"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             <select
               className="rounded border border-slate-300 bg-white px-2 py-1"
               value={severityFilter}
@@ -263,6 +273,7 @@ export default function IncidentLogPage() {
               type="button"
               className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-800 hover:bg-slate-100"
               onClick={() => {
+                setSearch("");
                 setSeverityFilter("all");
                 setModuleFilter("all");
                 setStatusFilter("all");

@@ -69,13 +69,13 @@ export default function TopNav() {
                 ความพร้อม
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/go-live">
-                Go-Live
+                เปิดใช้งานจริง
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/go-live-day">
                 วันเปิดจริง
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/uat-signoff">
-                UAT
+                รับรองผล UAT
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/incident-log">
                 เหตุการณ์
@@ -84,10 +84,10 @@ export default function TopNav() {
                 สรุปรายวัน
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/audit">
-                Audit
+                บันทึก Audit
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/security">
-                Security
+                ความปลอดภัย
               </Link>
               <Link className="topnav-link rounded-md px-2 py-1.5 hover:bg-slate-100" href="/health">
                 สุขภาพระบบ

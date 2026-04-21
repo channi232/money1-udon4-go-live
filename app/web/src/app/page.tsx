@@ -51,19 +51,19 @@ export default function Home() {
   const modules = useMemo(
     () => [
       {
-        name: "Money Module",
+        name: "โมดูลการเงิน",
         desc: "ตารางรายการการเงินแบบอ่านอย่างเดียว พร้อมส่งออก CSV/พิมพ์รายงาน",
         href: "/money",
         accent: "from-emerald-500/15 via-white to-sky-500/10",
       },
       {
-        name: "Slip Module",
+        name: "โมดูลสลิป",
         desc: "ค้นหาและเรียกดูสลิปเงินเดือนย้อนหลังได้สะดวก พร้อมส่งออก CSV/พิมพ์รายงาน",
         href: "/slip",
         accent: "from-indigo-500/15 via-white to-fuchsia-500/10",
       },
       {
-        name: "Tax Module",
+        name: "โมดูลภาษี",
         desc: "หนังสือรับรองภาษี ณ ที่จ่าย พร้อมสถานะจัดทำ/ดาวน์โหลด",
         href: "/tax",
         accent: "from-amber-500/15 via-white to-rose-500/10",
@@ -146,19 +146,19 @@ export default function Home() {
       },
       {
         key: "tax-ready",
-        label: "Tax พร้อมดาวน์โหลด (ในชุดข้อมูล)",
+        label: "ภาษีพร้อมดาวน์โหลด (ในชุดข้อมูล)",
         value: `${formatInt(snapshot.taxReadyCount)} รายการ`,
       },
       {
         key: "money-pending",
-        label: "Money รอตรวจสอบ (ในชุดข้อมูล)",
+        label: "การเงินรอตรวจสอบ (ในชุดข้อมูล)",
         value: `${formatInt(snapshot.moneyPendingCount)} รายการ`,
       },
     ];
   }, [snapshot]);
 
   const centralSourcesLine = snapshot
-    ? `แหล่งข้อมูล: Money=${sourceLabel(snapshot.moneySource)} · Slip=${sourceLabel(snapshot.slipSource)} · Tax=${sourceLabel(snapshot.taxSource)} · Tax อยู่ระหว่างจัดทำ ${formatInt(snapshot.taxProcessingCount)} รายการ`
+    ? `แหล่งข้อมูล: การเงิน=${sourceLabel(snapshot.moneySource)} · สลิป=${sourceLabel(snapshot.slipSource)} · ภาษี=${sourceLabel(snapshot.taxSource)} · ภาษีอยู่ระหว่างจัดทำ ${formatInt(snapshot.taxProcessingCount)} รายการ`
     : "";
 
   return (
@@ -194,7 +194,7 @@ export default function Home() {
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
               ภาพรวมการเงินแบบ “เห็นของจริง”
               <span className="block bg-gradient-to-r from-sky-200 via-white to-emerald-200 bg-clip-text text-transparent">
-                Money · Slip · Tax ในที่เดียว
+                การเงิน · สลิป · ภาษี ในที่เดียว
               </span>
             </h1>
 
@@ -207,7 +207,7 @@ export default function Home() {
                 href="/money"
                 className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-white/30 hover:bg-slate-50"
               >
-                เริ่มที่ Money
+                เริ่มที่โมดูลการเงิน
               </Link>
               <Link
                 href="/readiness"
@@ -259,7 +259,7 @@ export default function Home() {
                   href="/executive"
                   className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45"
                 >
-                  Executive Dashboard
+                  แดชบอร์ดผู้บริหาร
                 </Link>
               )}
               {isAdmin && (
@@ -268,25 +268,25 @@ export default function Home() {
                     href="/security"
                     className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45"
                   >
-                    Security Monitor
+                    เฝ้าระวังความปลอดภัย
                   </Link>
                   <Link
                     href="/audit"
                     className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45 sm:col-span-2"
                   >
-                    Audit Log
+                    บันทึก Audit
                   </Link>
                   <Link
                     href="/daily-brief"
                     className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45 sm:col-span-2"
                   >
-                    Daily Ops Brief
+                    สรุปปฏิบัติการประจำวัน
                   </Link>
                   <Link
                     href="/workflow-log"
                     className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45 sm:col-span-2"
                   >
-                    Workflow Transition Log
+                    บันทึกการเปลี่ยนสถานะงาน
                   </Link>
                 </>
               )}
@@ -294,7 +294,7 @@ export default function Home() {
                 href="/go-live"
                 className="rounded-xl border border-white/10 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-950/45 sm:col-span-2"
               >
-                Go-live Checklist (พิมพ์ได้)
+                เช็กลิสต์เปิดใช้งานจริง (พิมพ์ได้)
               </Link>
             </div>
           </aside>
@@ -303,21 +303,21 @@ export default function Home() {
         <section className="mt-10 grid gap-4 md:grid-cols-3">
           {[
             {
-              title: "Money รายการ",
+              title: "รายการการเงิน",
               value: loading ? "—" : formatInt(snapshot?.moneyCount ?? 0),
               sub: loading ? "กำลังโหลด..." : sourceLabel(snapshot?.moneySource ?? "fallback"),
               ok: snapshot?.moneyOk ?? false,
               hint: snapshot?.moneyMessage,
             },
             {
-              title: "Slip แถวข้อมูล",
+              title: "แถวข้อมูลสลิป",
               value: loading ? "—" : formatInt(snapshot?.slipCount ?? 0),
               sub: loading ? "กำลังโหลด..." : sourceLabel(snapshot?.slipSource ?? "fallback"),
               ok: snapshot?.slipOk ?? false,
               hint: snapshot?.slipMessage,
             },
             {
-              title: "Tax พร้อมดาวน์โหลด / ทั้งหมด",
+              title: "ภาษีพร้อมดาวน์โหลด / ทั้งหมด",
               value: loading
                 ? "—"
                 : `${formatInt(snapshot?.taxReadyCount ?? 0)} / ${formatInt(snapshot?.taxCount ?? 0)}`,
@@ -411,7 +411,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-white/60 opacity-0 transition group-hover:opacity-100" />
               <div className="relative">
                 <span className="inline-flex rounded-full bg-slate-950/80 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/10">
-                  READ-ONLY
+                  อ่านอย่างเดียว
                 </span>
                 <h2 className="mt-4 text-xl font-semibold text-slate-950">{mod.name}</h2>
                 <p className="mt-2 min-h-16 text-sm leading-relaxed text-slate-700">{mod.desc}</p>

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchSession, type ServerSession } from "@/lib/auth-api";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [session, setSession] = useState<ServerSession | null>(null);
+  const [logoMissing, setLogoMissing] = useState(false);
 
   const refresh = async () => {
     const s = await fetchSession();
@@ -24,6 +26,23 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-56px)] w-full max-w-6xl items-center px-6 py-12 md:px-10">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          {logoMissing ? (
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-orange-300 bg-orange-50 text-[10px] font-bold text-orange-800">
+              สพป.4
+            </span>
+          ) : (
+            <Image
+              src="/org-logo.png"
+              alt="โลโก้ สพป.อุดรธานี เขต 4"
+              width={36}
+              height={36}
+              className="rounded-full border border-orange-200 bg-white object-cover"
+              onError={() => setLogoMissing(true)}
+            />
+          )}
+          <span className="text-xs font-semibold text-slate-700">ระบบงานภายในหน่วยงาน</span>
+        </div>
         <h1 className="text-2xl font-bold">เข้าสู่ระบบ</h1>
         <p className="mt-1 text-xs text-slate-500">
           สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4 (สพป.อุดรธานี เขต 4)

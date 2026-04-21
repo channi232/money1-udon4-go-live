@@ -44,7 +44,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <TopNav />
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-slate-200 bg-white px-4 py-3 text-center text-xs text-slate-600">
+          สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4 (สพป.อุดรธานี เขต 4)
+        </footer>
       </body>
     </html>
   );

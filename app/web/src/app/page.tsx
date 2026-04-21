@@ -8,6 +8,7 @@ import { fetchSession, type ServerSession } from "@/lib/auth-api";
 import { fetchDailyBrief } from "@/lib/daily-brief-api";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
 type HomeSnapshot = {
   session: ServerSession;
@@ -45,6 +46,7 @@ function sourceLabel(source: "database" | "fallback") {
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [snapshot, setSnapshot] = useState<HomeSnapshot | null>(null);
+  const [logoMissing, setLogoMissing] = useState(false);
 
   const modules = useMemo(
     () => [
@@ -172,7 +174,20 @@ export default function Home() {
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-sky-100/90 backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(52,211,153,0.15)]" />
+              {logoMissing ? (
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-orange-300 bg-orange-50 text-[9px] font-bold text-orange-800">
+                  สพป.4
+                </span>
+              ) : (
+                <Image
+                  src="/org-logo.png"
+                  alt="โลโก้ สพป.อุดรธานี เขต 4"
+                  width={24}
+                  height={24}
+                  className="rounded-full border border-orange-200 bg-white object-cover"
+                  onError={() => setLogoMissing(true)}
+                />
+              )}
               สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 4 — สพป.อุดรธานี เขต 4
             </div>
 

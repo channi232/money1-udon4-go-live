@@ -35,3 +35,4 @@ New isolated project workspace for the unified finance platform.
 - `docs/SPRINT2_EXECUTION_PLAN_TH.md` - แผนเริ่ม Sprint-2 แบบลงมือทำได้ทันที
 - `docs/SPRINT2_REGRESSION_SHORT_TH.md` - เช็กลิสต์ regression รอบสั้นก่อน deploy งาน Sprint-2
 - `docs/LEGACY_UI_LABEL_MAPPING_TH.md` - ตารางเทียบคำระบบเดิมกับคำมาตรฐานระบบใหม่
+- `docs/MVP_7DAY_GO_LIVE_PLAN_TH.md` - แผนเร่งด่วน 7 วันแบบตัดงานไม่จำเป็นเพื่อเปิดใช้งานจริง

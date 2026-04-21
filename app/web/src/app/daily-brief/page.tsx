@@ -110,7 +110,7 @@ export default function DailyBriefPage() {
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
               onClick={() => {
                 if (!data) {
-                  alert("ยังไม่มีข้อมูลสำหรับ Export CSV กรุณารีเฟรชข้อมูลก่อน");
+                  alert("ยังไม่มีข้อมูลสำหรับส่งออก CSV กรุณารีเฟรชข้อมูลก่อน");
                   return;
                 }
                 exportDailyBriefCsv(data);

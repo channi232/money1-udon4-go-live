@@ -556,7 +556,7 @@ export default function SlipPage() {
                 });
               }}
             >
-              Export คิวสูง ({highPriorityRows.length})
+              ส่งออกคิวสูง ({highPriorityRows.length})
             </button>
             <button
               type="button"

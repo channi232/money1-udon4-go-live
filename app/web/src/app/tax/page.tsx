@@ -553,7 +553,7 @@ export default function TaxPage() {
                 });
               }}
             >
-              Export คิวสูง ({highPriorityRows.length})
+              ส่งออกคิวสูง ({highPriorityRows.length})
             </button>
             <button
               type="button"

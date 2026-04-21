@@ -133,7 +133,7 @@ function formatHistoryEntry(h: ReviewHistoryEntry): string {
 function buildTimelineSummaryText(key: string, rows: ReviewHistoryEntry[]): string {
   const lines: string[] = [];
   lines.push(`รหัสไทม์ไลน์: ${key}`);
-  lines.push(`Total events: ${rows.length}`);
+  lines.push(`จำนวนเหตุการณ์: ${rows.length}`);
   lines.push("");
   rows.forEach((h, idx) => {
     lines.push(`${idx + 1}. ${formatHistoryEntry(h)}`);
@@ -520,7 +520,7 @@ export default function AuditPage() {
 
   const copyDailyBrief = async (mode: "today" | "24h") => {
     const data = mode === "today" ? rowsToday(flaggedRows) : rowsWithinLastHours(flaggedRows, 24);
-    const text = buildDailyBriefText(mode === "today" ? "Today" : "Last 24 Hours", data);
+    const text = buildDailyBriefText(mode === "today" ? "วันนี้" : "ย้อนหลัง 24 ชั่วโมง", data);
     try {
       await navigator.clipboard.writeText(text);
       setDailyBriefStatus(mode === "today" ? "ok_today" : "ok_24h");
@@ -533,7 +533,7 @@ export default function AuditPage() {
   const exportDailyBriefText = (mode: "today" | "24h") => {
     try {
       const data = mode === "today" ? rowsToday(flaggedRows) : rowsWithinLastHours(flaggedRows, 24);
-      const label = mode === "today" ? "Today" : "Last 24 Hours";
+      const label = mode === "today" ? "วันนี้" : "ย้อนหลัง 24 ชั่วโมง";
       const text = buildDailyBriefText(label, data);
       const stamp = new Date().toISOString().slice(0, 10);
       const suffix = mode === "today" ? "today" : "24h";
@@ -863,10 +863,10 @@ export default function AuditPage() {
               <span className="ml-2 text-xs text-rose-700">ส่งออกสรุปเหตุการณ์ TXT ไม่สำเร็จ</span>
             ) : null}
             {snapshotStatus === "ok" ? (
-              <span className="ml-2 text-xs text-emerald-700">ส่งออก Full Audit Snapshot แล้ว (TXT + CSV)</span>
+              <span className="ml-2 text-xs text-emerald-700">ส่งออกภาพรวม Audit ทั้งชุดแล้ว (TXT + CSV)</span>
             ) : null}
             {snapshotStatus === "error" ? (
-              <span className="ml-2 text-xs text-rose-700">ส่งออก Full Audit Snapshot ไม่สำเร็จ</span>
+              <span className="ml-2 text-xs text-rose-700">ส่งออกภาพรวม Audit ทั้งชุดไม่สำเร็จ</span>
             ) : null}
             {dailyBriefStatus === "ok_today" ? (
               <span className="ml-2 text-xs text-emerald-700">คัดลอกสรุปรายวัน (วันนี้) แล้ว</span>
@@ -899,7 +899,7 @@ export default function AuditPage() {
                   <th className="py-2">โมดูล</th>
                   <th className="py-2">การกระทำ</th>
                   <th className="py-2">จำนวนรายการ</th>
-                  <th className="py-2">Severity</th>
+                  <th className="py-2">ระดับความรุนแรง</th>
                   <th className="py-2">Flags</th>
                   <th className="py-2">ตรวจทาน</th>
                   <th className="py-2">ข้อเสนอแนะการดำเนินการ</th>
@@ -963,7 +963,7 @@ export default function AuditPage() {
                           }`}
                           onClick={() => setRowReviewStatus(r, "new")}
                         >
-                          New
+                          ใหม่
                         </button>
                         <button
                           type="button"
@@ -974,7 +974,7 @@ export default function AuditPage() {
                           }`}
                           onClick={() => setRowReviewStatus(r, "acknowledged")}
                         >
-                          Acknowledged
+                          รับทราบแล้ว
                         </button>
                         <button
                           type="button"
@@ -985,7 +985,7 @@ export default function AuditPage() {
                           }`}
                           onClick={() => setRowReviewStatus(r, "resolved")}
                         >
-                          Resolved
+                          ปิดแล้ว
                         </button>
                         <button
                           type="button"

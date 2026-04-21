@@ -567,7 +567,7 @@ export default function MoneyPage() {
                 });
               }}
             >
-              Export คิวสูง ({highPriorityRows.length})
+              ส่งออกคิวสูง ({highPriorityRows.length})
             </button>
             <button
               type="button"

@@ -5,7 +5,7 @@ import AuthGuard from "@/components/auth-guard";
 const uatChecks = [
   "เข้าสู่ระบบและตรวจสิทธิ์ผู้ใช้งานได้ถูกต้อง",
   "เปิดหน้า Money/Slip/Tax ได้และข้อมูลโหลดจาก API จริง",
-  "ทดสอบ Export CSV ครบ 3 โมดูล",
+  "ทดสอบส่งออก CSV ครบ 3 โมดูล",
   "ทดสอบพิมพ์รายงานครบ 3 โมดูล",
   "ตรวจหน้า Daily Brief, Readiness และ Health ได้ปกติ",
   "ไม่พบ error สำคัญใน Console/Network ระหว่างทดสอบ",
@@ -17,7 +17,7 @@ export default function UatSignoffPage() {
   return (
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">UAT Sign-off</h1>
+        <h1 className="text-3xl font-bold">แบบรับรอง UAT</h1>
         <p className="mt-3 text-slate-600">แบบฟอร์มยืนยันผลทดสอบก่อนขึ้นระบบจริง (ฉบับสั้น)</p>
 
         <div className="no-print mt-3">
@@ -32,7 +32,7 @@ export default function UatSignoffPage() {
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
-            <h2 className="text-xl font-bold">เอกสาร UAT Sign-off</h2>
+            <h2 className="text-xl font-bold">เอกสารรับรอง UAT</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
           </div>
 

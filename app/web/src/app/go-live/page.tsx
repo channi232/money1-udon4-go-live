@@ -7,11 +7,11 @@ const checklist = [
   "ยืนยัน Basic Auth และบัญชี admin ใช้งานได้",
   "ยืนยัน /api/session.php?debug=1 ได้ authenticated=true",
   "Money / Slip / Tax แสดง source=database",
-  "ทดสอบ Export CSV ทุกโมดูล",
-  "ทดสอบ Print Report ทุกโมดูล",
-  "ทดสอบหน้า Audit Viewer (admin only)",
-  "ทดสอบหน้า Security Monitor + Threshold save/reset",
-  "ทดสอบหน้า Executive Dashboard + Export/Print",
+  "ทดสอบส่งออก CSV ทุกโมดูล",
+  "ทดสอบพิมพ์รายงานทุกโมดูล",
+  "ทดสอบหน้ามุมมองบันทึก Audit (เฉพาะผู้ดูแลระบบ)",
+  "ทดสอบหน้าเฝ้าระวังความปลอดภัย + บันทึก/รีเซ็ตค่า Threshold",
+  "ทดสอบหน้าแดชบอร์ดผู้บริหาร + ส่งออก/พิมพ์",
   "ทดสอบหน้า Go-Live Readiness ผ่านครบ",
   "ตรวจสิทธิ์ไฟล์สำคัญ (.htaccess/.htpasswd/config) ถูกต้อง",
   "ยืนยันมี backup ก่อนเปิดใช้งานจริง",
@@ -206,7 +206,7 @@ export default function GoLivePage() {
               href="/health"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
             >
-              เปิดหน้า Health Check
+              เปิดหน้าตรวจสุขภาพระบบ
             </Link>
             <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
               เอกสาร deploy อยู่ที่ `docs/DEPLOY_CHECKLIST_TH.md`

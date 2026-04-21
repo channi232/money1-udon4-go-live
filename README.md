@@ -33,3 +33,4 @@ New isolated project workspace for the unified finance platform.
 - `docs/PRIORITY_POLICY_TH.md` - เกณฑ์ Priority กลางสำหรับ money/tax/slip
 - `docs/SPRINT1_REGRESSION_CHECKLIST_TH.md` - เช็กลิสต์ regression ก่อนปล่อยงานรอบย่อย
 - `docs/SPRINT2_EXECUTION_PLAN_TH.md` - แผนเริ่ม Sprint-2 แบบลงมือทำได้ทันที
+- `docs/SPRINT2_REGRESSION_SHORT_TH.md` - เช็กลิสต์ regression รอบสั้นก่อน deploy งาน Sprint-2

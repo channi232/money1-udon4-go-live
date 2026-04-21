@@ -400,7 +400,7 @@ export default function TaxPage() {
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
             <h2 className="text-xl font-bold">รายงานโมดูลภาษี (Tax)</h2>
             <p className="text-sm text-slate-700">วันที่พิมพ์: {printedAt}</p>
-            <p className="text-sm text-slate-700">จำนวนรายการ: {filtered.length}</p>
+            <p className="text-sm text-slate-700">จำนวนรายการ: {sortedFiltered.length}</p>
           </div>
           <div className="no-print grid gap-3 md:grid-cols-3">
             <input

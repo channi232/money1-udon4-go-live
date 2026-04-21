@@ -80,6 +80,7 @@ export default function TaxPage() {
   const [usingSavedView, setUsingSavedView] = useState(false);
   const [copiedTrace, setCopiedTrace] = useState(false);
   const [reloading, setReloading] = useState(false);
+  const [workflowPersistence, setWorkflowPersistence] = useState<"database" | "file" | "unknown">("unknown");
 
   const loadTaxRows = async () => {
     const data = await fetchTaxRows();
@@ -102,7 +103,10 @@ export default function TaxPage() {
       if (active) setSession(s);
     });
     fetchWorkflowMap().then((w) => {
-      if (active && w.ok) setWorkflowState(w.map || {});
+      if (active && w.ok) {
+        setWorkflowState(w.map || {});
+        setWorkflowPersistence(w.persistence || "unknown");
+      }
     });
     void loadTaxRows();
     return () => {
@@ -170,6 +174,10 @@ export default function TaxPage() {
   };
 
   const updateWorkflow = (key: string, to: WorkflowStatus, fallback: WorkflowStatus) => {
+    if (workflowPersistence !== "database") {
+      setBulkMessage("ที่เก็บสถานะงานยังไม่เป็นฐานข้อมูล จึงไม่อนุญาตให้เปลี่ยนสถานะงาน");
+      return;
+    }
     if (source !== "database") {
       setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้เปลี่ยนสถานะงาน");
       return;
@@ -268,6 +276,10 @@ export default function TaxPage() {
     };
   }, [sortedFiltered, workflowState, highPriorityRows.length]);
   const bulkApply = async (to: WorkflowStatus) => {
+    if (workflowPersistence !== "database") {
+      setBulkMessage("ที่เก็บสถานะงานยังไม่เป็นฐานข้อมูล จึงไม่อนุญาตให้ดำเนินการแบบกลุ่ม");
+      return;
+    }
     if (source !== "database") {
       setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้ดำเนินการแบบกลุ่ม");
       return;
@@ -316,6 +328,10 @@ export default function TaxPage() {
   };
 
   const undoLastBulk = async () => {
+    if (workflowPersistence !== "database") {
+      setBulkMessage("ที่เก็บสถานะงานยังไม่เป็นฐานข้อมูล จึงไม่อนุญาตให้ย้อนกลับการปรับกลุ่ม");
+      return;
+    }
     if (source !== "database") {
       setBulkMessage("ขณะนี้เป็นข้อมูลสำรอง จึงไม่อนุญาตให้ย้อนกลับการปรับกลุ่ม");
       return;
@@ -404,6 +420,11 @@ export default function TaxPage() {
           {source !== "database" ? (
             <span className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-800">
               โหมดข้อมูลสำรอง: อ่านอย่างเดียวชั่วคราว
+            </span>
+          ) : null}
+          {workflowPersistence !== "database" ? (
+            <span className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-800">
+              ที่เก็บสถานะงานยังไม่พร้อมใช้งานฐานข้อมูล: ปิดการแก้สถานะชั่วคราว
             </span>
           ) : null}
         </div>

@@ -463,6 +463,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+                title="ตั้งมุมมองงานที่อยู่ระหว่างตรวจสอบ"
                 onClick={() => {
                   setStatus("รอตรวจสอบ");
                   setWorkflowFilter("in_review");
@@ -474,6 +475,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                title="ตั้งมุมมองงานที่ถูกตีกลับ"
                 onClick={() => {
                   setStatus("ตีกลับ");
                   setWorkflowFilter("rejected");
@@ -485,6 +487,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+                title="เรียงยอดเงินสูงสุดและล้างตัวกรอง priority"
                 onClick={() => {
                   setStatus("ทั้งหมด");
                   setWorkflowFilter("all");
@@ -497,6 +500,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700 hover:bg-slate-100"
+                title="ล้างตัวกรองทั้งหมดและลบมุมมองที่บันทึกไว้"
                 onClick={() => {
                   resetSavedView();
                 }}
@@ -506,6 +510,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 hover:bg-slate-100"
+                title="รีเซ็ตกลับค่าเริ่มต้นของหน้าปัจจุบัน"
                 onClick={resetSavedView}
               >
                 รีเซ็ตมุมมอง
@@ -513,6 +518,7 @@ export default function MoneyPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                title="โฟกัสเฉพาะรายการ priority สูง"
                 onClick={() => {
                   setPriorityFilter("สูง");
                   setWorkflowFilter("all");
@@ -527,6 +533,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
+              title="ส่งออก CSV ตามมุมมองปัจจุบัน"
               onClick={() => {
                 void trackAudit("money", "export_csv", sortedFiltered.length);
                 void exportMoneyCsv(sortedFiltered, (row) => {
@@ -541,6 +548,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
+              title="ส่งออกเฉพาะรายการ priority สูง"
               onClick={() => {
                 void trackAudit("money", "export_csv", highPriorityRows.length);
                 void exportMoneyCsv(highPriorityRows, (row) => {
@@ -555,6 +563,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
+              title="พิมพ์รายงานเฉพาะรายการ priority สูง"
               onClick={() =>
                 printMoneyReport(highPriorityRows.length, () => {
                   setQ("");
@@ -571,6 +580,7 @@ export default function MoneyPage() {
             <button
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
+              title="พิมพ์รายงานตามมุมมองปัจจุบัน"
               onClick={() =>
                 printMoneyReport(sortedFiltered.length, () => {
                   setVisibleCount(sortedFiltered.length);

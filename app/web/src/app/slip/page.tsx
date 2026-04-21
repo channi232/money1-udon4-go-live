@@ -452,6 +452,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+                title="ตั้งมุมมองงานที่อยู่ระหว่างตรวจสอบ"
                 onClick={() => {
                   setMonth("ทั้งหมด");
                   setWorkflowFilter("in_review");
@@ -464,6 +465,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                title="ตั้งมุมมองงานที่ถูกตีกลับ"
                 onClick={() => {
                   setMonth("ทั้งหมด");
                   setWorkflowFilter("rejected");
@@ -476,6 +478,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+                title="เรียงยอดสุทธิสูงสุดและล้างตัวกรอง priority"
                 onClick={() => {
                   setMonth("ทั้งหมด");
                   setWorkflowFilter("all");
@@ -488,6 +491,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+                title="โฟกัสเฉพาะรายการ priority สูง"
                 onClick={() => {
                   setPriorityFilter("สูง");
                   setWorkflowFilter("all");
@@ -499,6 +503,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700 hover:bg-slate-100"
+                title="ล้างตัวกรองทั้งหมดและลบมุมมองที่บันทึกไว้"
                 onClick={resetSavedView}
               >
                 preset: เคลียร์ทั้งหมด
@@ -506,6 +511,7 @@ export default function SlipPage() {
               <button
                 type="button"
                 className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-700 hover:bg-slate-100"
+                title="รีเซ็ตกลับค่าเริ่มต้นของหน้าปัจจุบัน"
                 onClick={resetSavedView}
               >
                 รีเซ็ตมุมมอง
@@ -516,6 +522,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
+              title="ส่งออก CSV ตามมุมมองปัจจุบัน"
               onClick={() => {
                 void trackAudit("slip", "export_csv", sortedFiltered.length);
                 void exportSlipCsv(sortedFiltered, (row) => {
@@ -530,6 +537,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 hover:bg-rose-100"
+              title="ส่งออกเฉพาะรายการ priority สูง"
               onClick={() => {
                 void trackAudit("slip", "export_csv", highPriorityRows.length);
                 void exportSlipCsv(highPriorityRows, (row) => {
@@ -544,6 +552,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm text-rose-800 hover:bg-rose-50"
+              title="พิมพ์รายงานเฉพาะรายการ priority สูง"
               onClick={() =>
                 printSlipReport(highPriorityRows.length, () => {
                   setQ("");
@@ -560,6 +569,7 @@ export default function SlipPage() {
             <button
               type="button"
               className="finance-toolbar-btn rounded-lg px-3 py-2 text-sm"
+              title="พิมพ์รายงานตามมุมมองปัจจุบัน"
               onClick={() =>
                 printSlipReport(sortedFiltered.length, () => {
                   setVisibleCount(sortedFiltered.length);

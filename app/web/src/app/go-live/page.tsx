@@ -18,6 +18,16 @@ const checklist = [
   "กำหนดผู้รับผิดชอบ monitor หลังเปิดใช้งาน",
 ];
 
+const coreChecklist7Day = [
+  "ยืนยันผู้ใช้จริงเข้าใช้งานได้ตามสิทธิ์ (การเงิน/บุคลากร/ผู้ดูแลระบบ)",
+  "ยืนยันโมดูลการเงิน, โมดูลภาษี, โมดูลสลิป อ่านข้อมูลจริงได้ (ไม่อยู่โหมดข้อมูลสำรอง)",
+  "ยืนยันการเปลี่ยนสถานะงานหลักทำได้ครบ (รับเรื่อง/อนุมัติ/ตีกลับ) ทั้ง 3 โมดูล",
+  "ยืนยันทดสอบส่งออก CSV และพิมพ์รายงานครบทั้ง 3 โมดูล",
+  "ยืนยันหน้า Audit / Security / Incident Log ใช้งานได้และบันทึกข้อมูลได้",
+  "ยืนยันสำรองข้อมูลล่าสุดแล้ว และทดสอบกู้คืนอย่างน้อย 1 รอบ",
+  "ยืนยันผู้รับผิดชอบช่วง 24 ชั่วโมงแรกหลังเปิดใช้งานจริงพร้อมช่องทางติดต่อ",
+];
+
 const rollbackPlan = [
   "สำรองโฟลเดอร์ /public_html ปัจจุบันไว้เป็น zip",
   "เก็บชุดไฟล์ out ล่าสุดไว้บนเครื่อง admin",
@@ -27,22 +37,22 @@ const rollbackPlan = [
 
 const goLiveGate = [
   {
-    gate: "Readiness",
+    gate: "ความพร้อมระบบ",
     passCriteria: "/readiness ผ่านครบทุกข้อ (100%)",
     owner: "System Admin",
   },
   {
-    gate: "Security",
+    gate: "ความปลอดภัย",
     passCriteria: "Session/Auth Header/Method enforcement ผ่าน",
     owner: "System Admin",
   },
   {
-    gate: "Business Validation",
+    gate: "ยืนยันข้อมูลธุรกิจ",
     passCriteria: "เทียบข้อมูลอย่างน้อย 20 ราย + 2 งวดข้อมูล",
     owner: "Finance + Personnel",
   },
   {
-    gate: "Rollback Ready",
+    gate: "ความพร้อมย้อนกลับระบบ",
     passCriteria: "มี backup ล่าสุด + ทดสอบ restore ขั้นต้นแล้ว",
     owner: "System Admin",
   },
@@ -124,6 +134,18 @@ export default function GoLivePage() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-4 rounded-lg border border-indigo-300 bg-indigo-50 p-3">
+            <h3 className="text-sm font-semibold text-indigo-900">ชุดเร่งด่วน 7 วัน (ต้องผ่านก่อนเปิดใช้งานจริง)</h3>
+            <ul className="mt-2 space-y-1 text-sm text-indigo-900">
+              {coreChecklist7Day.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <span className="mt-0.5">☐</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <h2 className="mt-6 text-lg font-semibold">2) จุดผ่านก่อนเปิดใช้งาน (ต้องผ่านทุกข้อ)</h2>
           <div className="mt-2 overflow-x-auto">

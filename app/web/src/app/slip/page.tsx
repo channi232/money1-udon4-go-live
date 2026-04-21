@@ -440,7 +440,11 @@ export default function SlipPage() {
             <span className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-800">
               ที่เก็บสถานะงานยังไม่พร้อมใช้งานฐานข้อมูล: ปิดการแก้สถานะชั่วคราว
             </span>
-          ) : null}
+          ) : (
+            <span className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
+              ที่เก็บสถานะงานพร้อมใช้งานฐานข้อมูล
+            </span>
+          )}
         </div>
         <p className="mt-1 text-xs text-slate-500">
           เกณฑ์ระดับความสำคัญ: สูง=ตีกลับ/กำลังตรวจสอบและยอดสูงมาก, กลาง=กำลังตรวจสอบหรือยอดสูง, ปกติ=ทั่วไป

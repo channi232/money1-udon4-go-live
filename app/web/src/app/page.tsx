@@ -161,6 +161,42 @@ export default function Home() {
     ? `แหล่งข้อมูล: การเงิน=${sourceLabel(snapshot.moneySource)} · สลิป=${sourceLabel(snapshot.slipSource)} · ภาษี=${sourceLabel(snapshot.taxSource)} · ภาษีอยู่ระหว่างจัดทำ ${formatInt(snapshot.taxProcessingCount)} รายการ`
     : "";
 
+  const launchBoard = useMemo(() => {
+    if (!snapshot) return [];
+    return [
+      {
+        title: "สิทธิ์ผู้ดูแลระบบพร้อม",
+        ok: snapshot.session.authenticated && snapshot.session.role === "admin",
+        detail: snapshot.session.authenticated
+          ? `ผู้ใช้ ${snapshot.session.username || "-"} (${snapshot.session.role})`
+          : "ยังไม่ยืนยันเซสชันผู้ดูแลระบบ",
+      },
+      {
+        title: "โมดูลการเงินใช้ข้อมูลจริง",
+        ok: snapshot.moneySource === "database" && snapshot.moneyOk,
+        detail: sourceLabel(snapshot.moneySource),
+      },
+      {
+        title: "โมดูลภาษีใช้ข้อมูลจริง",
+        ok: snapshot.taxSource === "database" && snapshot.taxOk,
+        detail: sourceLabel(snapshot.taxSource),
+      },
+      {
+        title: "โมดูลสลิปใช้ข้อมูลจริง",
+        ok: snapshot.slipSource === "database" && snapshot.slipOk,
+        detail: sourceLabel(snapshot.slipSource),
+      },
+      {
+        title: "ความเสี่ยงประจำวันไม่วิกฤต",
+        ok: snapshot.dailyRiskLevel !== "critical",
+        detail: `ระดับความเสี่ยง: ${snapshot.dailyRiskLevel}`,
+      },
+    ];
+  }, [snapshot]);
+
+  const launchPassed = useMemo(() => launchBoard.filter((x) => x.ok).length, [launchBoard]);
+  const launchReady = launchBoard.length > 0 && launchPassed === launchBoard.length;
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50">
       <div className="pointer-events-none absolute inset-0">
@@ -349,6 +385,46 @@ export default function Home() {
               {!loading && kpi.hint ? <p className="mt-2 text-xs text-slate-200/55">หมายเหตุ: {kpi.hint}</p> : null}
             </article>
           ))}
+        </section>
+
+        <section className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold">Launch Board (สถานะก่อนเปิดใช้งานจริง)</h3>
+              <p className="mt-1 text-sm text-slate-200/80">สรุปเงื่อนไขเร่งด่วนแบบผ่าน/ไม่ผ่านจากข้อมูลล่าสุดหน้าเดียว</p>
+            </div>
+            <span
+              className={[
+                "rounded-full px-3 py-1 text-xs font-semibold ring-1",
+                loading
+                  ? "bg-white/5 text-slate-200 ring-white/10"
+                  : launchReady
+                    ? "bg-emerald-500/15 text-emerald-100 ring-emerald-400/25"
+                    : "bg-amber-500/15 text-amber-100 ring-amber-400/25",
+              ].join(" ")}
+            >
+              {loading ? "กำลังประเมิน..." : `ผ่าน ${launchPassed}/${launchBoard.length}`}
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {launchBoard.map((item) => (
+              <div key={item.title} className="rounded-xl border border-white/10 bg-slate-950/30 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <span className={item.ok ? "text-emerald-300" : "text-amber-300"}>{item.ok ? "ผ่าน" : "ไม่ผ่าน"}</span>
+                </div>
+                <p className="mt-2 text-xs text-slate-300/80">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/readiness" className="inline-flex rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50">
+              เปิดหน้า Readiness
+            </Link>
+            <Link href="/go-live" className="inline-flex rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+              เปิดหน้า Go-Live
+            </Link>
+          </div>
         </section>
 
         {isAdmin ? (

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 type IncidentRow = {
   id: string;
   time: string;
+  shift: "morning" | "afternoon" | "night" | "oncall";
   severity: "P1" | "P2" | "P3";
   module: "money" | "slip" | "tax" | "platform";
   impact: string;
@@ -15,12 +16,13 @@ type IncidentRow = {
   trace: string;
 };
 
-const STORAGE_KEY = "incident-log-v1";
+const STORAGE_KEY = "incident-log-v2";
 
 const defaultRows: IncidentRow[] = [
   {
     id: "seed-1",
     time: "T+00:20",
+    shift: "morning",
     severity: "P2",
     module: "platform",
     impact: "ผู้ใช้บางส่วนรีเฟรชแล้วโหลดช้า",
@@ -32,6 +34,7 @@ const defaultRows: IncidentRow[] = [
   {
     id: "seed-2",
     time: "T+01:10",
+    shift: "afternoon",
     severity: "P3",
     module: "slip",
     impact: "ผู้ใช้สอบถามความหมายสถานะ fallback",
@@ -43,6 +46,7 @@ const defaultRows: IncidentRow[] = [
   {
     id: "seed-3",
     time: "T+02:40",
+    shift: "night",
     severity: "P2",
     module: "tax",
     impact: "พบรายการค้นหาไม่ตรงความคาดหวัง 1 ราย",
@@ -55,9 +59,9 @@ const defaultRows: IncidentRow[] = [
 
 function exportIncidentCsv(rows: IncidentRow[]) {
   const stamp = new Date().toISOString().slice(0, 10);
-  const header = ["เวลา", "ความรุนแรง", "โมดูล", "ผลกระทบ", "การดำเนินการ", "ผู้รับผิดชอบ", "สถานะ", "support_trace"];
+  const header = ["เวลา", "กะงาน", "ความรุนแรง", "โมดูล", "ผลกระทบ", "การดำเนินการ", "ผู้รับผิดชอบ", "สถานะ", "support_trace"];
   const lines = rows.map((r) =>
-    [r.time, r.severity, r.module, r.impact, r.action, r.owner, r.status, r.trace]
+    [r.time, r.shift, r.severity, r.module, r.impact, r.action, r.owner, r.status, r.trace]
       .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
       .join(","),
   );
@@ -75,6 +79,7 @@ export default function IncidentLogPage() {
   const [rows, setRows] = useState<IncidentRow[]>(defaultRows);
   const [form, setForm] = useState<Omit<IncidentRow, "id">>({
     time: "",
+    shift: "morning",
     severity: "P2",
     module: "platform",
     impact: "",
@@ -88,6 +93,7 @@ export default function IncidentLogPage() {
   const [saved, setSaved] = useState(false);
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState<"all" | IncidentRow["severity"]>("all");
+  const [shiftFilter, setShiftFilter] = useState<"all" | IncidentRow["shift"]>("all");
   const [moduleFilter, setModuleFilter] = useState<"all" | IncidentRow["module"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | IncidentRow["status"]>("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "severity_high" | "status">("newest");
@@ -123,13 +129,14 @@ export default function IncidentLogPage() {
     const needle = search.trim().toLowerCase();
     return rows.filter((row) => {
       const bySeverity = severityFilter === "all" || row.severity === severityFilter;
+      const byShift = shiftFilter === "all" || row.shift === shiftFilter;
       const byModule = moduleFilter === "all" || row.module === moduleFilter;
       const byStatus = statusFilter === "all" || row.status === statusFilter;
-      const haystack = `${row.time} ${row.module} ${row.impact} ${row.action} ${row.owner} ${row.trace}`.toLowerCase();
+      const haystack = `${row.time} ${row.shift} ${row.module} ${row.impact} ${row.action} ${row.owner} ${row.trace}`.toLowerCase();
       const byText = needle === "" || haystack.includes(needle);
-      return bySeverity && byModule && byStatus && byText;
+      return bySeverity && byShift && byModule && byStatus && byText;
     });
-  }, [rows, severityFilter, moduleFilter, statusFilter, search]);
+  }, [rows, severityFilter, shiftFilter, moduleFilter, statusFilter, search]);
   const visibleRows = useMemo(() => {
     const list = [...filteredRows];
     if (sortBy === "newest") {
@@ -162,11 +169,23 @@ export default function IncidentLogPage() {
       stat[row.status] += 1;
       moduleCounts[row.module] += 1;
     }
+    const shiftCounts: Record<IncidentRow["shift"], number> = {
+      morning: 0,
+      afternoon: 0,
+      night: 0,
+      oncall: 0,
+    };
+    for (const row of visibleRows) {
+      shiftCounts[row.shift] += 1;
+    }
     const topModuleEntry = (Object.entries(moduleCounts) as Array<[IncidentRow["module"], number]>)
+      .sort((a, b) => b[1] - a[1])[0];
+    const topShiftEntry = (Object.entries(shiftCounts) as Array<[IncidentRow["shift"], number]>)
       .sort((a, b) => b[1] - a[1])[0];
     return {
       ...stat,
       topModule: topModuleEntry && topModuleEntry[1] > 0 ? `${topModuleEntry[0]} (${topModuleEntry[1]})` : "-",
+      topShift: topShiftEntry && topShiftEntry[1] > 0 ? `${topShiftEntry[0]} (${topShiftEntry[1]})` : "-",
     };
   }, [visibleRows]);
   const copyIncidentLine = async () => {
@@ -186,6 +205,7 @@ export default function IncidentLogPage() {
     const next: IncidentRow = {
       id: `inc-${now.getTime()}`,
       time: form.time.trim() || fallbackTime,
+      shift: form.shift,
       severity: form.severity,
       module: form.module,
       impact: form.impact.trim(),
@@ -250,7 +270,7 @@ export default function IncidentLogPage() {
           <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-6">
             <input
               className="rounded border border-slate-300 bg-white px-2 py-1"
-              placeholder="ค้นหา impact/action/owner/trace"
+              placeholder="ค้นหา impact/action/owner/trace/shift"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -263,6 +283,17 @@ export default function IncidentLogPage() {
               <option value="P1">severity: P1</option>
               <option value="P2">severity: P2</option>
               <option value="P3">severity: P3</option>
+            </select>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              value={shiftFilter}
+              onChange={(e) => setShiftFilter(e.target.value as "all" | IncidentRow["shift"])}
+            >
+              <option value="all">shift: ทั้งหมด</option>
+              <option value="morning">shift: morning</option>
+              <option value="afternoon">shift: afternoon</option>
+              <option value="night">shift: night</option>
+              <option value="oncall">shift: oncall</option>
             </select>
             <select
               className="rounded border border-slate-300 bg-white px-2 py-1"
@@ -291,6 +322,7 @@ export default function IncidentLogPage() {
               onClick={() => {
                 setSearch("");
                 setSeverityFilter("all");
+                setShiftFilter("all");
                 setModuleFilter("all");
                 setStatusFilter("all");
                 setSortBy("newest");
@@ -316,6 +348,7 @@ export default function IncidentLogPage() {
               onClick={() => {
                 setStatusFilter("open");
                 setSeverityFilter("all");
+                setShiftFilter("all");
                 setModuleFilter("all");
                 setSortBy("severity_high");
               }}
@@ -328,6 +361,7 @@ export default function IncidentLogPage() {
               onClick={() => {
                 setStatusFilter("all");
                 setSeverityFilter("P1");
+                setShiftFilter("all");
                 setModuleFilter("all");
                 setSortBy("newest");
               }}
@@ -340,6 +374,7 @@ export default function IncidentLogPage() {
               onClick={() => {
                 setStatusFilter("all");
                 setSeverityFilter("all");
+                setShiftFilter("all");
                 setModuleFilter("platform");
                 setSortBy("newest");
               }}
@@ -352,6 +387,7 @@ export default function IncidentLogPage() {
               onClick={() => {
                 setStatusFilter("monitoring");
                 setSeverityFilter("all");
+                setShiftFilter("all");
                 setModuleFilter("all");
                 setSortBy("newest");
               }}
@@ -359,7 +395,7 @@ export default function IncidentLogPage() {
               preset: monitoring
             </button>
           </div>
-          <div className="mt-3 grid gap-2 text-xs md:grid-cols-5">
+          <div className="mt-3 grid gap-2 text-xs md:grid-cols-6">
             <div className="rounded border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700">
               ทั้งหมด: <span className="font-semibold text-slate-900">{summary.total}</span>
             </div>
@@ -374,6 +410,9 @@ export default function IncidentLogPage() {
             </div>
             <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
               โมดูลที่พบบ่อย: <span className="font-semibold text-indigo-900">{summary.topModule}</span>
+            </div>
+            <div className="rounded border border-violet-300 bg-violet-50 px-3 py-2 text-violet-800">
+              กะที่พบบ่อย: <span className="font-semibold text-violet-900">{summary.topShift}</span>
             </div>
           </div>
           <div className="no-print mt-3 rounded-lg border border-indigo-300 bg-indigo-50 p-3">
@@ -398,13 +437,23 @@ export default function IncidentLogPage() {
           </div>
           <div className="no-print mt-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3">
             <p className="text-sm font-semibold text-emerald-900">เพิ่ม Incident ใหม่</p>
-            <div className="mt-2 grid gap-2 md:grid-cols-4">
+            <div className="mt-2 grid gap-2 md:grid-cols-5">
               <input
                 className="rounded border border-emerald-200 bg-white px-2 py-1 text-sm"
                 placeholder="เวลา (เช่น T+03:10)"
                 value={form.time}
                 onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))}
               />
+              <select
+                className="rounded border border-emerald-200 bg-white px-2 py-1 text-sm"
+                value={form.shift}
+                onChange={(e) => setForm((prev) => ({ ...prev, shift: e.target.value as IncidentRow["shift"] }))}
+              >
+                <option value="morning">morning</option>
+                <option value="afternoon">afternoon</option>
+                <option value="night">night</option>
+                <option value="oncall">oncall</option>
+              </select>
               <select
                 className="rounded border border-emerald-200 bg-white px-2 py-1 text-sm"
                 value={form.severity}
@@ -477,6 +526,7 @@ export default function IncidentLogPage() {
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="py-2">เวลา</th>
+                  <th className="py-2">กะงาน</th>
                   <th className="py-2">Severity</th>
                   <th className="py-2">โมดูล</th>
                   <th className="py-2">ผลกระทบ</th>
@@ -491,6 +541,7 @@ export default function IncidentLogPage() {
                 {visibleRows.map((row) => (
                   <tr key={row.id} className="border-b border-slate-100">
                     <td className="py-2 font-medium">{row.time}</td>
+                    <td className="py-2">{row.shift}</td>
                     <td className="py-2">{row.severity}</td>
                     <td className="py-2">{row.module}</td>
                     <td className="py-2">{row.impact}</td>

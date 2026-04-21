@@ -377,7 +377,7 @@ export default function SlipPage() {
             href="/"
             className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
-            กลับหน้าหลัก
+            กลับหน้าหลักระบบจัดการ
           </Link>
         </div>
         <p className="mt-3 text-slate-600">ค้นหาและดูรายการสลิปเงินเดือนแบบอ่านอย่างเดียว</p>

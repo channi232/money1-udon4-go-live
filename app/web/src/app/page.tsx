@@ -197,6 +197,7 @@ export default function Home() {
                 การเงิน · สลิป · ภาษี ในที่เดียว
               </span>
             </h1>
+            <p className="mt-2 text-sm text-slate-300/85">หน้าหลักระบบจัดการ</p>
 
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200/80 md:text-lg">
               หน้าแรกนี้ดึงตัวเลขจาก API จริง (อ่านอย่างเดียว) เพื่อให้เห็นสถานะการเชื่อมต่อและปริมาณข้อมูลทันที พร้อมทางลัดไปหน้าที่ใช้งานจริง
@@ -419,7 +420,7 @@ export default function Home() {
                   href={mod.href}
                   className="mt-5 inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
                 >
-                  เปิดโมดูล
+                  เข้าสู่หน้าจัดการ
                 </Link>
               </div>
             </article>

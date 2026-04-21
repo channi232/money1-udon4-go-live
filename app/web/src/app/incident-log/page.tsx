@@ -114,6 +114,30 @@ export default function IncidentLogPage() {
     const stage = text.match(/stage=([^|]+)/i)?.[1]?.trim() || "";
     return { req, code, stage };
   }, [traceInput]);
+  const summary = useMemo(() => {
+    const stat = {
+      total: rows.length,
+      open: 0,
+      monitoring: 0,
+      resolved: 0,
+    };
+    const moduleCounts: Record<IncidentRow["module"], number> = {
+      platform: 0,
+      money: 0,
+      tax: 0,
+      slip: 0,
+    };
+    for (const row of rows) {
+      stat[row.status] += 1;
+      moduleCounts[row.module] += 1;
+    }
+    const topModuleEntry = (Object.entries(moduleCounts) as Array<[IncidentRow["module"], number]>)
+      .sort((a, b) => b[1] - a[1])[0];
+    return {
+      ...stat,
+      topModule: topModuleEntry && topModuleEntry[1] > 0 ? `${topModuleEntry[0]} (${topModuleEntry[1]})` : "-",
+    };
+  }, [rows]);
   const copyIncidentLine = async () => {
     const line = `Trace: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
     try {
@@ -191,6 +215,23 @@ export default function IncidentLogPage() {
 
           <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900">
             ใช้หน้านี้บันทึกเหตุการณ์จริงระหว่าง Go-Live และแนบเป็นหลักฐานปิดงานวันแรก
+          </div>
+          <div className="mt-3 grid gap-2 text-xs md:grid-cols-5">
+            <div className="rounded border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700">
+              ทั้งหมด: <span className="font-semibold text-slate-900">{summary.total}</span>
+            </div>
+            <div className="rounded border border-rose-300 bg-rose-50 px-3 py-2 text-rose-800">
+              open: <span className="font-semibold text-rose-900">{summary.open}</span>
+            </div>
+            <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
+              monitoring: <span className="font-semibold text-amber-900">{summary.monitoring}</span>
+            </div>
+            <div className="rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-800">
+              resolved: <span className="font-semibold text-emerald-900">{summary.resolved}</span>
+            </div>
+            <div className="rounded border border-indigo-300 bg-indigo-50 px-3 py-2 text-indigo-800">
+              โมดูลที่พบบ่อย: <span className="font-semibold text-indigo-900">{summary.topModule}</span>
+            </div>
           </div>
           <div className="no-print mt-3 rounded-lg border border-indigo-300 bg-indigo-50 p-3">
             <p className="text-sm font-semibold text-indigo-900">Trace Helper (วางจากปุ่มคัดลอก trace)</p>

@@ -91,7 +91,7 @@ export default function WorkflowLogPage() {
     <AuthGuard allowedRoles={["admin"]}>
       <main className="scheme-light mx-auto min-h-screen w-full max-w-[1400px] px-6 py-10 text-slate-900">
         <h1 className="text-3xl font-bold">บันทึกการเปลี่ยนสถานะงาน</h1>
-        <p className="mt-2 text-sm text-slate-600">มุมมองสำหรับตรวจสอบการเปลี่ยนสถานะจริงจากระบบหลังบ้าน (เพิ่มต่อเนื่องเท่านั้น) ใช้สำหรับ UAT และตรวจย้อนหลัง</p>
+        <p className="mt-2 text-sm text-slate-600">มุมมองสำหรับตรวจสอบการเปลี่ยนสถานะจริงจากระบบหลังบ้าน (เพิ่มต่อเนื่องเท่านั้น) ใช้สำหรับรับรอง UAT และตรวจย้อนหลัง</p>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid gap-2 md:grid-cols-4">
@@ -177,7 +177,7 @@ export default function WorkflowLogPage() {
                   .finally(() => window.setTimeout(() => setCopyStatus(""), 1800));
               }}
             >
-              คัดลอกสรุป UAT
+              คัดลอกสรุปรับรอง UAT
             </button>
           </div>
 
@@ -190,8 +190,8 @@ export default function WorkflowLogPage() {
           <p className="mt-2 text-sm text-slate-600">{loading ? "กำลังโหลด..." : message}</p>
           {exportStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">ส่งออก CSV แล้ว</p> : null}
           {exportStatus === "error" ? <p className="mt-1 text-xs text-rose-700">ส่งออก CSV ไม่สำเร็จ</p> : null}
-          {copyStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">คัดลอกสรุป UAT แล้ว</p> : null}
-          {copyStatus === "error" ? <p className="mt-1 text-xs text-rose-700">คัดลอกสรุป UAT ไม่สำเร็จ</p> : null}
+          {copyStatus === "ok" ? <p className="mt-1 text-xs text-emerald-700">คัดลอกสรุปรับรอง UAT แล้ว</p> : null}
+          {copyStatus === "error" ? <p className="mt-1 text-xs text-rose-700">คัดลอกสรุปรับรอง UAT ไม่สำเร็จ</p> : null}
         </section>
 
         <section className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

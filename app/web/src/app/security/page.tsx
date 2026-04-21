@@ -115,7 +115,7 @@ export default function SecurityPage() {
     <AuthGuard allowedRoles={["admin"]}>
       <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-12">
         <h1 className="text-3xl font-bold">เฝ้าระวังความปลอดภัย</h1>
-        <p className="mt-3 text-slate-600">ติดตามเหตุการณ์ความปลอดภัยจากระบบ Rate Limit (429) เฉพาะ Admin</p>
+        <p className="mt-3 text-slate-600">ติดตามเหตุการณ์ความปลอดภัยจากระบบจำกัดอัตราเรียกใช้งาน (429) สำหรับผู้ดูแลระบบ</p>
 
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="print-only mb-4 border-b border-slate-300 pb-3">
@@ -184,7 +184,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="no-print mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="mb-2 text-xs text-slate-500">ตั้งค่า Threshold (Admin)</p>
+            <p className="mb-2 text-xs text-slate-500">ตั้งค่าเกณฑ์เฝ้าระวัง (ผู้ดูแลระบบ)</p>
             <div className="grid gap-2 md:grid-cols-4">
               <input
                 type="number"
@@ -227,10 +227,10 @@ export default function SecurityPage() {
                   setThresholds(latest.thresholds);
                   setThresholdHistory(latest.history);
                   setSavingThresholds(false);
-                  setMessage(result.ok ? "บันทึก threshold เรียบร้อย" : `บันทึกไม่สำเร็จ: ${result.message ?? "unknown_error"}`);
+                  setMessage(result.ok ? "บันทึกเกณฑ์เฝ้าระวังเรียบร้อย" : `บันทึกไม่สำเร็จ: ${result.message ?? "unknown_error"}`);
                 }}
               >
-                {savingThresholds ? "กำลังบันทึก..." : "บันทึก Threshold"}
+                {savingThresholds ? "กำลังบันทึก..." : "บันทึกเกณฑ์เฝ้าระวัง"}
               </button>
               <button
                 type="button"
@@ -254,7 +254,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="mb-2 text-xs text-slate-500">ประวัติการแก้ Threshold (ล่าสุด 20 รายการ)</p>
+            <p className="mb-2 text-xs text-slate-500">ประวัติการแก้เกณฑ์เฝ้าระวัง (ล่าสุด 20 รายการ)</p>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm text-slate-900">
                 <thead>
@@ -310,7 +310,7 @@ export default function SecurityPage() {
             </select>
             <input
               className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400"
-              placeholder="ค้นหา IP"
+              placeholder="ค้นหาที่อยู่ IP"
               value={ipFilter}
               onChange={(e) => {
                 setLoading(true);
@@ -363,12 +363,12 @@ export default function SecurityPage() {
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="py-2">เวลา</th>
                   <th className="py-2">เหตุการณ์</th>
-                  <th className="py-2">Bucket</th>
+                  <th className="py-2">กลุ่มเหตุการณ์</th>
                   <th className="py-2">IP</th>
-                  <th className="py-2">Retry (sec)</th>
-                  <th className="py-2">Limit</th>
-                  <th className="py-2">URI</th>
-                  <th className="py-2">User Agent</th>
+                  <th className="py-2">รอเรียกซ้ำ (วินาที)</th>
+                  <th className="py-2">เพดานจำกัด</th>
+                  <th className="py-2">ปลายทางคำขอ (URI)</th>
+                  <th className="py-2">ตัวแทนผู้ใช้งาน</th>
                 </tr>
               </thead>
               <tbody>

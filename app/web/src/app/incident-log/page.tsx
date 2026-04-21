@@ -90,6 +90,7 @@ export default function IncidentLogPage() {
   const [severityFilter, setSeverityFilter] = useState<"all" | IncidentRow["severity"]>("all");
   const [moduleFilter, setModuleFilter] = useState<"all" | IncidentRow["module"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | IncidentRow["status"]>("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "severity_high" | "status">("newest");
   const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
 
   useEffect(() => {
@@ -129,9 +130,24 @@ export default function IncidentLogPage() {
       return bySeverity && byModule && byStatus && byText;
     });
   }, [rows, severityFilter, moduleFilter, statusFilter, search]);
+  const visibleRows = useMemo(() => {
+    const list = [...filteredRows];
+    if (sortBy === "newest") {
+      return list.sort((a, b) => b.id.localeCompare(a.id));
+    }
+    if (sortBy === "oldest") {
+      return list.sort((a, b) => a.id.localeCompare(b.id));
+    }
+    if (sortBy === "severity_high") {
+      const rank: Record<IncidentRow["severity"], number> = { P1: 3, P2: 2, P3: 1 };
+      return list.sort((a, b) => rank[b.severity] - rank[a.severity]);
+    }
+    const statusRank: Record<IncidentRow["status"], number> = { open: 3, monitoring: 2, resolved: 1 };
+    return list.sort((a, b) => statusRank[b.status] - statusRank[a.status]);
+  }, [filteredRows, sortBy]);
   const summary = useMemo(() => {
     const stat = {
-      total: filteredRows.length,
+      total: visibleRows.length,
       open: 0,
       monitoring: 0,
       resolved: 0,
@@ -142,7 +158,7 @@ export default function IncidentLogPage() {
       tax: 0,
       slip: 0,
     };
-    for (const row of filteredRows) {
+    for (const row of visibleRows) {
       stat[row.status] += 1;
       moduleCounts[row.module] += 1;
     }
@@ -152,7 +168,7 @@ export default function IncidentLogPage() {
       ...stat,
       topModule: topModuleEntry && topModuleEntry[1] > 0 ? `${topModuleEntry[0]} (${topModuleEntry[1]})` : "-",
     };
-  }, [filteredRows]);
+  }, [visibleRows]);
   const copyIncidentLine = async () => {
     const line = `Trace: req=${parsedTrace.req || "-"} | code=${parsedTrace.code || "-"} | stage=${parsedTrace.stage || "-"}`;
     try {
@@ -202,7 +218,7 @@ export default function IncidentLogPage() {
           <button
             type="button"
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100"
-            onClick={() => exportIncidentCsv(filteredRows)}
+            onClick={() => exportIncidentCsv(visibleRows)}
           >
             Export Incident CSV (ตามตัวกรอง)
           </button>
@@ -231,7 +247,7 @@ export default function IncidentLogPage() {
           <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900">
             ใช้หน้านี้บันทึกเหตุการณ์จริงระหว่าง Go-Live และแนบเป็นหลักฐานปิดงานวันแรก
           </div>
-          <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-5">
+          <div className="no-print mt-3 grid gap-2 text-xs md:grid-cols-6">
             <input
               className="rounded border border-slate-300 bg-white px-2 py-1"
               placeholder="ค้นหา impact/action/owner/trace"
@@ -277,9 +293,70 @@ export default function IncidentLogPage() {
                 setSeverityFilter("all");
                 setModuleFilter("all");
                 setStatusFilter("all");
+                setSortBy("newest");
               }}
             >
               ล้างตัวกรอง
+            </button>
+            <select
+              className="rounded border border-slate-300 bg-white px-2 py-1"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "newest" | "oldest" | "severity_high" | "status")}
+            >
+              <option value="newest">เรียง: ล่าสุดก่อน</option>
+              <option value="oldest">เรียง: เก่าสุดก่อน</option>
+              <option value="severity_high">เรียง: ความรุนแรงสูงก่อน</option>
+              <option value="status">เรียง: สถานะ open ก่อน</option>
+            </select>
+          </div>
+          <div className="no-print mt-2 flex flex-wrap gap-2 text-xs">
+            <button
+              type="button"
+              className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-rose-800 hover:bg-rose-100"
+              onClick={() => {
+                setStatusFilter("open");
+                setSeverityFilter("all");
+                setModuleFilter("all");
+                setSortBy("severity_high");
+              }}
+            >
+              preset: open ทั้งหมด
+            </button>
+            <button
+              type="button"
+              className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-800 hover:bg-amber-100"
+              onClick={() => {
+                setStatusFilter("all");
+                setSeverityFilter("P1");
+                setModuleFilter("all");
+                setSortBy("newest");
+              }}
+            >
+              preset: เฉพาะ P1
+            </button>
+            <button
+              type="button"
+              className="rounded border border-indigo-300 bg-indigo-50 px-2 py-1 text-indigo-800 hover:bg-indigo-100"
+              onClick={() => {
+                setStatusFilter("all");
+                setSeverityFilter("all");
+                setModuleFilter("platform");
+                setSortBy("newest");
+              }}
+            >
+              preset: platform ล่าสุด
+            </button>
+            <button
+              type="button"
+              className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-emerald-800 hover:bg-emerald-100"
+              onClick={() => {
+                setStatusFilter("monitoring");
+                setSeverityFilter("all");
+                setModuleFilter("all");
+                setSortBy("newest");
+              }}
+            >
+              preset: monitoring
             </button>
           </div>
           <div className="mt-3 grid gap-2 text-xs md:grid-cols-5">
@@ -411,7 +488,7 @@ export default function IncidentLogPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row) => (
+                {visibleRows.map((row) => (
                   <tr key={row.id} className="border-b border-slate-100">
                     <td className="py-2 font-medium">{row.time}</td>
                     <td className="py-2">{row.severity}</td>

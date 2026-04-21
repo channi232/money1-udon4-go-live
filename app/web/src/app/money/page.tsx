@@ -798,7 +798,7 @@ export default function MoneyPage() {
                               onClick={() =>
                                 setHistoryTarget({
                                   key,
-                                  title: `ประวัติสถานะงาน - Money`,
+                                  title: `ประวัติสถานะงาน - โมดูลการเงิน`,
                                   history: workflowState[key]?.history || [],
                                 })
                               }

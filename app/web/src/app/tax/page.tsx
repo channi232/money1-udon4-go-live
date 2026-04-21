@@ -785,7 +785,7 @@ export default function TaxPage() {
                               onClick={() =>
                                 setHistoryTarget({
                                   key,
-                                  title: `ประวัติสถานะงาน - Tax`,
+                                  title: `ประวัติสถานะงาน - โมดูลภาษี`,
                                   history: workflowState[key]?.history || [],
                                 })
                               }

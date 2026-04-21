@@ -200,7 +200,7 @@ export default function WorkflowLogPage() {
               <tr className="border-b border-slate-200 text-left text-slate-600">
                 <th className="py-2 pr-2">เวลา</th>
                 <th className="py-2 pr-2">โมดูล</th>
-                <th className="py-2 pr-2">รหัสรายการ</th>
+                <th className="py-2 pr-2">รหัสการเปลี่ยนสถานะ</th>
                 <th className="py-2 pr-2">การเปลี่ยนสถานะ</th>
                 <th className="py-2 pr-2">ผู้ดำเนินการ</th>
                 <th className="py-2 pr-2">เหตุผล</th>

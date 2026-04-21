@@ -785,7 +785,7 @@ export default function SlipPage() {
                               onClick={() =>
                                 setHistoryTarget({
                                   key,
-                                  title: `ประวัติสถานะงาน - Slip`,
+                                  title: `ประวัติสถานะงาน - โมดูลสลิป`,
                                   history: workflowState[key]?.history || [],
                                 })
                               }

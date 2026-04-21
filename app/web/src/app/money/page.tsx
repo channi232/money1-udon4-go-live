@@ -65,6 +65,7 @@ export default function MoneyPage() {
   const [apiMessage, setApiMessage] = useState("");
   const [moneyMeta, setMoneyMeta] = useState<MoneyApiResponse["meta"]>(undefined);
   const [apiDiag, setApiDiag] = useState<{ requestId?: string; errorCode?: string; stage?: string }>({});
+  const [copiedTrace, setCopiedTrace] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -233,6 +234,16 @@ export default function MoneyPage() {
     () => new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
     [],
   );
+  const copySupportTrace = async () => {
+    const line = `req=${apiDiag.requestId || "-"}${apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}${apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}`;
+    try {
+      await navigator.clipboard.writeText(line);
+      setCopiedTrace(true);
+      window.setTimeout(() => setCopiedTrace(false), 1500);
+    } catch {
+      setCopiedTrace(false);
+    }
+  };
 
   return (
     <AuthGuard allowedRoles={["finance", "admin"]}>
@@ -245,11 +256,20 @@ export default function MoneyPage() {
           {apiMessage ? ` - ${apiMessage}` : ""}
         </p>
         {session?.role === "admin" && (apiDiag.requestId || apiDiag.errorCode || apiDiag.stage) ? (
-          <p className="mt-1 text-xs text-indigo-700">
-            support trace: req={apiDiag.requestId || "-"}
-            {apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}
-            {apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}
-          </p>
+          <div className="mt-1 flex items-center gap-2 text-xs text-indigo-700">
+            <p>
+              support trace: req={apiDiag.requestId || "-"}
+              {apiDiag.errorCode ? ` | code=${apiDiag.errorCode}` : ""}
+              {apiDiag.stage ? ` | stage=${apiDiag.stage}` : ""}
+            </p>
+            <button
+              type="button"
+              className="rounded border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-800 hover:bg-indigo-100"
+              onClick={() => void copySupportTrace()}
+            >
+              {copiedTrace ? "คัดลอกแล้ว" : "คัดลอก trace"}
+            </button>
+          </div>
         ) : null}
         {source === "database" && moneyMeta?.status_mapping?.source === "amount_heuristic" ? (
           <p className="mt-1 text-xs text-amber-800">
